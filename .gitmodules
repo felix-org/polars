@@ -1,0 +1,9 @@
+[submodule "dependencies/pybind11"]
+	path = dependencies/pybind11
+	url = https://github.com/globalstressindex/pybind11.git
+[submodule "dependencies/armadillo-code"]
+	path = dependencies/armadillo-code
+	url = https://github.com/globalstressindex/armadillo-code.git
+[submodule "dependencies/googletest"]
+	path = dependencies/googletest
+	url = https://github.com/globalstressindex/googletest.git

@@ -1,6 +1,3 @@
-# Ignore dependencies
-dependencies/*
-
 # Prerequisites
 *.d
 
@@ -33,3 +30,15 @@ dependencies/*
 *.exe
 *.out
 *.app
+
+# CPP
+build/
+cmake-build-*/
+
+# python
+.pytest_cache/
+.ipynb_checkpoints/
+__pycache__/
+venv/
+
+*.egg-info
