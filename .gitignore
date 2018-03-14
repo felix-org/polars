@@ -40,5 +40,5 @@ cmake-build-*/
 .ipynb_checkpoints/
 __pycache__/
 venv/
-
+dist/
 *.egg-info
