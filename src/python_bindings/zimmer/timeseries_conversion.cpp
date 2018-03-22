@@ -29,8 +29,8 @@ TimeSeries to_timeseries(py::array_t<double> timestamps, py::array_t<double> val
 
 tupvec from_timeseries_to_tuple(const TimeSeries& ts) {
 
-    stdvec tstmps = arma::conv_to<stdvec>::from(ts.timestamps);
-    stdvec vals = arma::conv_to<stdvec>::from(ts.values);
+    stdvec tstmps = arma::conv_to<stdvec>::from(ts.timestamps());
+    stdvec vals = arma::conv_to<stdvec>::from(ts.values());
 
     // TODO: Return proper numpy arrays.
     return std::make_tuple(tstmps, vals);
