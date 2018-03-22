@@ -9,7 +9,7 @@
 #include "pybind11/numpy.h"
 #include "pybind11/stl.h"
 
-#include "../../cpp/zimmer/time_series.h"
+#include "../../cpp/zimmer/TimeSeries.h"
 #include "../../cpp/zimmer/filters.h"
 
 
