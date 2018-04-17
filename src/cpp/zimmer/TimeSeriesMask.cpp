@@ -13,20 +13,20 @@ namespace zimmer {
 
 
     TimeSeriesMask::TimeSeriesMask(const arma::vec &t, const arma::uvec &v) : t(t), v(v) {
-        assert(t.n_cols == 1 && v.n_cols == 1);
-        assert(t.n_rows == v.n_rows);
-        assert(!arma::any(v > 1));  // Np TimeSeriesMask values may be greater than 1
+        //assert(t.n_cols == 1 && v.n_cols == 1);
+        //assert(t.n_rows == v.n_rows);
+        //assert(!arma::any(v > 1));  // Np TimeSeriesMask values may be greater than 1
     };
 
 
     TimeSeriesMask TimeSeriesMask::operator|(const TimeSeriesMask &rhs) const {
-        assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
+        //assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
         return TimeSeriesMask(timestamps(), (values() + rhs.values()) > 0);
     }
 
 
     TimeSeriesMask TimeSeriesMask::operator&(const TimeSeriesMask &rhs) const {
-        assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
+        //assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
         return TimeSeriesMask(timestamps(), (values() + rhs.values()) == 2);
     }
 
@@ -52,7 +52,7 @@ namespace zimmer {
     }
 
     TimeSeriesMask::SeriesSize TimeSeriesMask::size() const {
-        assert(timestamps().size() == values().size());
+        //assert(timestamps().size() == values().size());
         return timestamps().size();
     }
 

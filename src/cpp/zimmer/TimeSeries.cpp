@@ -35,8 +35,8 @@ namespace zimmer {
 
 
     Quantile::Quantile(double quantile) : quantile(quantile) {
-        assert(quantile >= 0);
-        assert(quantile <= 1);
+        //assert(quantile >= 0);
+        //assert(quantile <= 1);
     }
 
 
@@ -73,8 +73,8 @@ TimeSeries::TimeSeries() = default;
 
 // todo; check for 1-D series & that the lengths match
 TimeSeries::TimeSeries(const arma::vec &t, const arma::vec &v) : t(t), v(v) {
-    assert(t.n_cols == 1 && v.n_cols == 1);
-    assert(t.n_rows == v.n_rows);
+    //assert(t.n_cols == 1 && v.n_cols == 1);
+    //assert(t.n_rows == v.n_rows);
 };
 
 
@@ -100,37 +100,37 @@ TimeSeriesMask TimeSeries::operator!=(const int rhs) const {  // TODO implement 
 // TimeSeries [op] TimeSeries methods
 TimeSeriesMask TimeSeries::operator==(const TimeSeries &rhs) const {
     // TODO: make this fast enough to always check at runtime
-    assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
-    return zimmer::TimeSeriesMask::TimeSeriesMask(timestamps(), values() == rhs.values());
+    //assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
+    return TimeSeriesMask(timestamps(), values() == rhs.values());
 }
 
 
 TimeSeriesMask TimeSeries::operator>(const TimeSeries &rhs) const {
-    assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
-    return zimmer::TimeSeriesMask::TimeSeriesMask(timestamps(), values() > rhs.values());
+    //assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
+    return TimeSeriesMask(timestamps(), values() > rhs.values());
 }
 
 
 TimeSeriesMask TimeSeries::operator<(const TimeSeries &rhs) const {
-    assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
+    //assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
     return zimmer::TimeSeriesMask(timestamps(), values() < rhs.values());
 }
 
 
 TimeSeries TimeSeries::operator+(const TimeSeries &rhs) const {
-    assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
+    //assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
     return zimmer::TimeSeries(timestamps(), values() + rhs.values());
 }
 
 
 TimeSeries TimeSeries::operator-(const TimeSeries &rhs) const {
-    assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
+    //assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
     return zimmer::TimeSeries(timestamps(), values() - rhs.values());
 }
 
 
 TimeSeries TimeSeries::operator*(const TimeSeries &rhs) const {
-    assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
+    //assert(!arma::any(timestamps() != rhs.timestamps()));  // Use not any != to handle empty array case
     return zimmer::TimeSeries(timestamps(), values() % rhs.values());
 }
 
@@ -159,7 +159,7 @@ TimeSeries TimeSeries::operator*(const double &rhs) const {
 // compare two vecs, taking account of NANs (normal comparison operators don't give true for NAN == NAN)
 bool equal_handling_nans(const arma::vec &lhs, const arma::vec &rhs) {
 
-    assert(lhs.n_cols == 1 && rhs.n_cols == 1);
+    //assert(lhs.n_cols == 1 && rhs.n_cols == 1);
 
     if ((lhs.n_rows != rhs.n_rows)) return false;
     if ((lhs.n_cols != rhs.n_cols)) return false;
@@ -192,7 +192,7 @@ bool AlmostEqual(double a, double b) {
 // compare two vecs, taking account of NANs (normal comparison operators don't give true for NAN == NAN)
 bool almost_equal_handling_nans(const arma::vec &lhs, const arma::vec &rhs) {
 
-    assert(lhs.n_cols == 1 && rhs.n_cols == 1);
+    //assert(lhs.n_cols == 1 && rhs.n_cols == 1);
 
     if ((lhs.n_rows != rhs.n_rows)) return false;
     if ((lhs.n_cols != rhs.n_cols)) return false;
@@ -260,8 +260,8 @@ TimeSeries
 TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &processor, SeriesSize minPeriods,
                     bool center) const {
 
-    assert(center); // todo; implement center:false
-    assert(windowSize > 0);
+    //assert(center); // todo; implement center:false
+    //assert(windowSize > 0);
 
     if (minPeriods == 0) {
         minPeriods = windowSize;
@@ -310,7 +310,7 @@ double TimeSeries::mean() const {
 
 
 TimeSeries::SeriesSize TimeSeries::size() const {
-    assert(timestamps().size() == values().size());
+    //assert(timestamps().size() == values().size());
     return timestamps().size();
 }
 
@@ -321,7 +321,7 @@ arma::vec TimeSeries::finiteValues() const {
 
 
 TimeSeries::SeriesSize TimeSeries::finiteSize() const {
-    assert(timestamps().size() == values().size());
+    //assert(timestamps().size() == values().size());
     return finiteValues().size();
 }
 
