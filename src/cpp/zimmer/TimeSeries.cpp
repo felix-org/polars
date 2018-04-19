@@ -258,10 +258,11 @@ TimeSeries TimeSeries::abs() const {
 // todo; allow passing in transformation function rather than WindowProcessor.
 TimeSeries
 TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &processor, SeriesSize minPeriods,
-                    bool center) const {
+                    bool center, bool symmetric) const {
 
     //assert(center); // todo; implement center:false
     //assert(windowSize > 0);
+    //assert(windowSize % 2 == 0); // TODO: Make symmetric = true and even windows work!
 
     if (minPeriods == 0) {
         minPeriods = windowSize;
@@ -274,13 +275,31 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
 
     // roll a window [left,right], of up to size windowSize, centered on centerIdx, and hand to processor if there are minPeriods finite values.
     for (arma::uword centerIdx = 0; centerIdx < size(); centerIdx++) {
+
         arma::sword leftIdx = centerIdx - centerOffset;
-        if (leftIdx < 0) {
-            leftIdx = 0;
-        }
-        arma::uword rightIdx = centerIdx - centerOffset + windowSize - 1;
-        if (rightIdx >= size()) {
-            rightIdx = size() - 1;
+        arma::sword rightIdx = centerIdx - centerOffset + windowSize - 1;
+
+        if (symmetric) {
+            // Estimate windows available:
+            if (leftIdx < 0){
+                rightIdx = centerIdx + centerOffset + leftIdx;
+                leftIdx = 0;
+            }
+
+            if (rightIdx >= size()) {
+                arma::sword r_clipped = rightIdx - size();
+                leftIdx = leftIdx + r_clipped + 1;
+                rightIdx = size() - 1;
+            }
+
+        } else {
+
+            if (leftIdx < 0) {
+                leftIdx = 0;
+            }
+            if (rightIdx >= size()) {
+                rightIdx = size() - 1;
+            }
         }
         const TimeSeries subSeries = TimeSeries(t.subvec(leftIdx, rightIdx), v.subvec(leftIdx, rightIdx));
         if (subSeries.finiteSize() >= minPeriods) {

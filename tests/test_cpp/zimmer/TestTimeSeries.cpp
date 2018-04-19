@@ -227,8 +227,20 @@ namespace TimeSeriesTests {
                 TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3.5, NAN, NAN}).rolling(3, zimmer::Count(0), 1),
                 TimeSeries({1, 2, 3, 4, 5}, {2, 3, 2, 1, 0})
         ) << "Expect " << "with window=3, min_periods=1 and a default of 0, all windows should have a count";
-    }
 
+        // Symmetric = True
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}).rolling(3, zimmer::Count(), 1, true, true),
+                TimeSeries({1, 2, 3, 4, 5}, {1, 3, 3, 3, 1})
+        ) << "Expect " << "with window of 3 the timeseries expects smaller windows on the edges so counts are 1";
+
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(7, zimmer::Count(), 1, true, true),
+                TimeSeries({1, 2, 3, 4, 5, 6}, {1, 3, 5, 5, 3, 1})
+        ) << "Expect " << "with window of 7 the timeseries expects smaller and smaller counts along the edges";
+    }
 
     TEST(TimeSeries, operator__add) {
         EXPECT_PRED2(

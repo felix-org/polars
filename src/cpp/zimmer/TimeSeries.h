@@ -114,7 +114,7 @@ public:
     TimeSeries pow(double power) const;
 
     TimeSeries rolling(SeriesSize windowSize, const zimmer::WindowProcessor &processor,
-                       SeriesSize minPeriods = 0 /* 0 treated as windowSize */, bool center = true) const;
+                       SeriesSize minPeriods = 0 /* 0 treated as windowSize */, bool center = true, bool symmetric = false) const;
 
     double mean() const;
 
