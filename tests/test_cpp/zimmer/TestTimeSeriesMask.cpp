@@ -3,8 +3,8 @@
 //
 #include "gtest/gtest.h"
 
-#include "../../../src/cpp/zimmer/TimeSeriesMask.h"
-#include "../../../src/cpp/zimmer/TimeSeries.h"
+#include "zimmer/TimeSeriesMask.h"
+#include "zimmer/TimeSeries.h"
 
 
 namespace TimeSeriesMaskTests {
