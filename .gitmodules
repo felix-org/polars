@@ -7,3 +7,6 @@
 [submodule "dependencies/googletest"]
 	path = dependencies/googletest
 	url = https://github.com/globalstressindex/googletest.git
+[submodule "dependencies/date"]
+	path = dependencies/date
+	url = git@github.com:HowardHinnant/date.git
