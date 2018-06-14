@@ -382,6 +382,12 @@ namespace TimeSeriesTests {
                 TimeSeries({1, 2, 3, 4}, {0, -2, 2, NAN}),
                 zimmer::TimeSeriesMask({1, 2, 3, 4}, {0, 1, 1, 0})
         ) << "Expect " << "> should work as per pair, including NAN != NAN";
+
+        EXPECT_PRED2(
+                zimmer::TimeSeriesMask::equal,
+                TimeSeries({1, 2, 3, 4}, {0, -1, 3, NAN}) >= 0,
+                zimmer::TimeSeriesMask({1, 2, 3, 4}, {1, 0, 1, 0})
+        ) << "Expect " << ">= should work per item, including NAN != NAN";
     }
 
     TEST(TimeSeries, operator__lt) {
@@ -398,6 +404,12 @@ namespace TimeSeriesTests {
                 TimeSeries({1, 2, 3, 4}, {0, -1, 3, NAN}),
                 zimmer::TimeSeriesMask({1, 2, 3, 4}, {0, 1, 1, 0})
         ) << "Expect " << "> should work as per pair, including NAN != NAN";
+
+        EXPECT_PRED2(
+                zimmer::TimeSeriesMask::equal,
+                TimeSeries({1, 2, 3, 4}, {0, -1, 3, NAN}) <= 0,
+                zimmer::TimeSeriesMask({1, 2, 3, 4}, {1, 1, 0, 0})
+        ) << "Expect " << "<= should work per item, including NAN != NAN";
     }
 
 } // namespace TimeSeriesTests

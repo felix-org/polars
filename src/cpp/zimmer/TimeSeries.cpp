@@ -66,6 +66,14 @@ namespace zimmer {
     double zimmer::Count::processWindow(const TimeSeries &window) const {
         return window.finiteSize();
     }
+
+
+    zimmer::Mean::Mean(double default_value) : default_value(default_value) {}
+
+
+    double zimmer::Mean::processWindow(const TimeSeries &window) const {
+        return arma::sum(window.finiteValues()) / window.finiteSize();
+    }
 } // zimmer
 
 TimeSeries::TimeSeries() = default;
@@ -140,6 +148,13 @@ TimeSeriesMask TimeSeries::operator>(const double &rhs) const {
     return TimeSeriesMask(timestamps(), values() > (arma::ones(size()) * rhs));
 }
 
+TimeSeriesMask TimeSeries::operator>=(const double &rhs) const {
+    return TimeSeriesMask(timestamps(), values() >= (arma::ones(size()) * rhs));
+}
+
+TimeSeriesMask TimeSeries::operator<=(const double &rhs) const {
+    return TimeSeriesMask(timestamps(), values() <= (arma::ones(size()) * rhs));
+}
 
 TimeSeries TimeSeries::operator+(const double &rhs) const {
     return TimeSeries(timestamps(), values() + rhs);

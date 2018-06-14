@@ -65,6 +65,22 @@ namespace zimmer {
         double default_value = NAN;
     };
 
+    class Mean : public WindowProcessor {
+    public:
+        Mean() = default;
+
+        Mean(double default_value);
+
+        double processWindow(const TimeSeries &window) const;
+
+        inline double defaultValue() const {
+            return default_value;
+        }
+
+    private:
+        double default_value = NAN;
+    };
+
 }  // zimmer
 
 
@@ -88,6 +104,10 @@ public:
     TimeSeries operator*(const double &rhs) const;
 
     zimmer::TimeSeriesMask operator>(const double &rhs) const;
+
+    zimmer::TimeSeriesMask operator>=(const double &rhs) const;
+
+    zimmer::TimeSeriesMask operator<=(const double &rhs) const;
 
     zimmer::TimeSeriesMask operator==(const TimeSeries &rhs) const;  // TODO test for floating point stability
 
