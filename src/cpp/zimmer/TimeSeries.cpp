@@ -22,6 +22,7 @@
 #include <cassert>
 
 #include <cmath>
+#include <vector>
 
 typedef zimmer::TimeSeriesMask TimeSeriesMask;
 namespace zimmer {
@@ -40,7 +41,7 @@ namespace zimmer {
     }
 
 
-    double Quantile::processWindow(const TimeSeries &window) const {
+    double Quantile::processWindow(const TimeSeries &window, ) const {
         arma::vec v = sort(window.finiteValues());
         // note, this is based on how q works in python numpy percentile rather than the more usual quantile defn.
         double quantilePosition = quantile * ((double) v.size() - 1);
@@ -74,6 +75,59 @@ namespace zimmer {
     double zimmer::Mean::processWindow(const TimeSeries &window) const {
         return arma::sum(window.finiteValues()) / window.finiteSize();
     }
+
+
+    template<typename T> arma::vec arange(T start, T stop, T step) {
+        // Equivalent to numpy arange
+
+        std::vector<T> vals;
+
+        for (T value = start; value < stop; value += step)
+            vals.push_back(value);
+
+        return arma::conv_to< arma::colvec >::from(vals);
+    }
+
+    arma::vec triang(int M, bool sym) {
+        /* Same implementation as scipy.signal */
+
+        if(M <= 0){
+            return arma::vec({});
+        }
+
+        if(M <= 1){
+            // Handle small arrays
+            return arma::vec({1.0});
+        }
+
+        arma::vec w;
+        arma::vec n = arange<double>(1, floor((M+1) / 2.0) + 1);
+
+        if(sym == false){
+            M = M + 1;
+        }
+
+        if (M % 2 == 0) {
+            w = (2 * n - 1.0) / M;
+            w = arma::join_vert(w, arma::flipud(w));
+        } else {
+            w = 2 * n / (M + 1.0);
+            arma::vec w_inv = arma::flipud(w);
+            arma::vec pos = arange<int>(1, w_inv.size());
+            w = arma::join_vert(w, w_inv.elem(arma::conv_to<arma::uvec>::from(pos)));
+        }
+
+        if(sym == false){
+            arma::vec pos = arange<int>(0, w.size() - 1);
+            return w.elem(arma::conv_to<arma::uvec>::from(pos));
+        } else{
+            return w;
+        }
+
+    }
+
+
+
 } // zimmer
 
 TimeSeries::TimeSeries() = default;
@@ -273,7 +327,7 @@ TimeSeries TimeSeries::abs() const {
 // todo; allow passing in transformation function rather than WindowProcessor.
 TimeSeries
 TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &processor, SeriesSize minPeriods,
-                    bool center, bool symmetric) const {
+                    bool center, bool symmetric, std::string win_type) const {
 
     //assert(center); // todo; implement center:false
     //assert(windowSize > 0);
@@ -316,7 +370,21 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
                 rightIdx = size() - 1;
             }
         }
-        const TimeSeries subSeries = TimeSeries(t.subvec(leftIdx, rightIdx), v.subvec(leftIdx, rightIdx));
+
+        arma::vec values = v.subvec(leftIdx, rightIdx);
+
+        if(win_type == "triang"){
+
+            auto weights = zimmer::triang(windowSize);
+            std::vector<double> ext = arma::conv_to< std::vector<double> >::from(weights);
+
+            for (int i = 0; i <= values.size(); i += 1){
+                values[i] = weights.at(i) * values[i];
+            }
+        }
+
+        const TimeSeries subSeries = TimeSeries(t.subvec(leftIdx, rightIdx), values);
+
         if (subSeries.finiteSize() >= minPeriods) {
             resultv(centerIdx) = processor.processWindow(subSeries);
         } else {

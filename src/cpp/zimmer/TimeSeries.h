@@ -13,7 +13,17 @@
 
 class TimeSeries;
 
+bool AlmostEqual(double a, double b);
+bool equal_handling_nans(const arma::vec &lhs, const arma::vec &rhs);
+bool almost_equal_handling_nans(const arma::vec &lhs, const arma::vec &rhs);
+
 namespace zimmer {
+
+    template<typename T>
+    arma::vec arange(T start, T stop, T step = 1);
+
+    arma::vec triang(int M, bool sym = true);
+
     class WindowProcessor {
     public:
         virtual double processWindow(const TimeSeries &window) const = 0;
@@ -81,6 +91,7 @@ namespace zimmer {
         double default_value = NAN;
     };
 
+
 }  // zimmer
 
 
@@ -133,8 +144,12 @@ public:
 
     TimeSeries pow(double power) const;
 
-    TimeSeries rolling(SeriesSize windowSize, const zimmer::WindowProcessor &processor,
-                       SeriesSize minPeriods = 0 /* 0 treated as windowSize */, bool center = true, bool symmetric = false) const;
+    TimeSeries rolling(SeriesSize windowSize,
+                       const zimmer::WindowProcessor &processor,
+                       SeriesSize minPeriods = 0, /* 0 treated as windowSize */
+                       bool center = true,
+                       bool symmetric = false,
+                       std::string win_type = "None") const;
 
     double mean() const;
 
