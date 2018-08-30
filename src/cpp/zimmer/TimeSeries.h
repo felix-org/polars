@@ -26,7 +26,7 @@ namespace zimmer {
 
     class WindowProcessor {
     public:
-        virtual double processWindow(const TimeSeries &window) const = 0;
+        virtual double processWindow(const TimeSeries &window, const std::string win_type = "None") const = 0;
 
         virtual double defaultValue() const = 0;
     };
@@ -35,7 +35,7 @@ namespace zimmer {
     public:
         Quantile(double quantile);
 
-        double processWindow(const TimeSeries &window) const;
+        double processWindow(const TimeSeries &window, const std::string win_type = "None") const;
 
         inline double defaultValue() const {
             return NAN;
@@ -52,7 +52,7 @@ namespace zimmer {
     public:
         Sum() = default;
 
-        double processWindow(const TimeSeries &window) const;
+        double processWindow(const TimeSeries &window, const std::string win_type = "None") const;
 
         inline double defaultValue() const {
             return NAN;
@@ -65,7 +65,7 @@ namespace zimmer {
 
         Count(double default_value);
 
-        double processWindow(const TimeSeries &window) const;
+        double processWindow(const TimeSeries &window, const std::string win_type = "None") const;
 
         inline double defaultValue() const {
             return default_value;
@@ -81,7 +81,7 @@ namespace zimmer {
 
         Mean(double default_value);
 
-        double processWindow(const TimeSeries &window) const;
+        double processWindow(const TimeSeries &window, const std::string win_type = "None") const;
 
         inline double defaultValue() const {
             return default_value;

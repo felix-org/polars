@@ -41,7 +41,7 @@ namespace zimmer {
     }
 
 
-    double Quantile::processWindow(const TimeSeries &window, ) const {
+    double Quantile::processWindow(const TimeSeries &window, const std::string win_type) const {
         arma::vec v = sort(window.finiteValues());
         // note, this is based on how q works in python numpy percentile rather than the more usual quantile defn.
         double quantilePosition = quantile * ((double) v.size() - 1);
@@ -56,7 +56,7 @@ namespace zimmer {
     }
 
 
-    double zimmer::Sum::processWindow(const TimeSeries &window) const {
+    double zimmer::Sum::processWindow(const TimeSeries &window, const std::string win_type) const {
         return arma::sum(window.finiteValues());
     }
 
@@ -64,7 +64,7 @@ namespace zimmer {
     zimmer::Count::Count(double default_value) : default_value(default_value) {}
 
 
-    double zimmer::Count::processWindow(const TimeSeries &window) const {
+    double zimmer::Count::processWindow(const TimeSeries &window, const std::string win_type) const {
         return window.finiteSize();
     }
 
@@ -72,8 +72,14 @@ namespace zimmer {
     zimmer::Mean::Mean(double default_value) : default_value(default_value) {}
 
 
-    double zimmer::Mean::processWindow(const TimeSeries &window) const {
-        return arma::sum(window.finiteValues()) / window.finiteSize();
+    double zimmer::Mean::processWindow(const TimeSeries &window, const std::string win_type) const {
+
+        if(win_type == "triang"){
+            auto weight = arma::sum(zimmer::triang(window.size()));
+            return arma::sum(window.finiteValues()) / weight;
+        } else {
+            return arma::sum(window.finiteValues()) / window.finiteSize();
+        }
     }
 
 
@@ -386,7 +392,7 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
         const TimeSeries subSeries = TimeSeries(t.subvec(leftIdx, rightIdx), values);
 
         if (subSeries.finiteSize() >= minPeriods) {
-            resultv(centerIdx) = processor.processWindow(subSeries);
+            resultv(centerIdx) = processor.processWindow(subSeries, win_type);
         } else {
             resultv(centerIdx) = processor.defaultValue();
         }

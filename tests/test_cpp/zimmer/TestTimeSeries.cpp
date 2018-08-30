@@ -501,12 +501,6 @@ namespace TimeSeriesTests {
         EXPECT_PRED2(
                 TimeSeries::equal,
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Sum(), 0, true, false, "triang"),
-                TimeSeries({1, 2, 3, 4, 5}, {NAN,  6.5, 4.5, NAN, NAN})
-        ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should be the sum, not NAN";
-
-        EXPECT_PRED2(
-                TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Sum(), 0, true, false, "triang"),
                 TimeSeries({1, 2, 3, 4, 5}, {NAN,  4.25, 4.0, NAN, NAN})
         ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should be the sum, not NAN";
 
@@ -532,8 +526,14 @@ namespace TimeSeriesTests {
 
         EXPECT_PRED2(
                 TimeSeries::equal,
+                TimeSeries({1, 2, 3}, {1, 2, 3}).rolling(3, zimmer::Mean(), 0, true, false, "triang"),
+                TimeSeries({1, 2, 3}, {NAN, 2, NAN})
+        ) << "Expect " << "with a window of 3 the timeseries of length 3 returns just central value";
+
+        EXPECT_PRED2(
+                TimeSeries::equal,
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Mean(), 0, true, false, "triang"),
-                TimeSeries({1, 2, 3, 4, 5}, {NAN,  6.5, 4.5, NAN, NAN})
-        ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should be the sum, not NAN";
+                TimeSeries({1, 2, 3, 4, 5}, {NAN,  2.125, 2.0, NAN, NAN})
+        ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should give weighted mean, not NAN";
     }
 } // namespace TimeSeriesTests
