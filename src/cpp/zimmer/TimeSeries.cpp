@@ -18,11 +18,7 @@
 
 #include "TimeSeriesMask.h"
 #include "TimeSeries.h"
-
-#include <cassert>
-
-#include <cmath>
-#include <vector>
+#include "numc.h"
 
 typedef zimmer::TimeSeriesMask TimeSeriesMask;
 namespace zimmer {
@@ -41,7 +37,7 @@ namespace zimmer {
     }
 
 
-    double Quantile::processWindow(const TimeSeries &window, const std::string win_type) const {
+    double Quantile::processWindow(const TimeSeries &window, const WindowType win_type) const {
         arma::vec v = sort(window.finiteValues());
         // note, this is based on how q works in python numpy percentile rather than the more usual quantile defn.
         double quantilePosition = quantile * ((double) v.size() - 1);
@@ -56,7 +52,7 @@ namespace zimmer {
     }
 
 
-    double zimmer::Sum::processWindow(const TimeSeries &window, const std::string win_type) const {
+    double zimmer::Sum::processWindow(const TimeSeries &window, const WindowType win_type) const {
         return arma::sum(window.finiteValues());
     }
 
@@ -64,7 +60,7 @@ namespace zimmer {
     zimmer::Count::Count(double default_value) : default_value(default_value) {}
 
 
-    double zimmer::Count::processWindow(const TimeSeries &window, const std::string win_type) const {
+    double zimmer::Count::processWindow(const TimeSeries &window, const WindowType win_type) const {
         return window.finiteSize();
     }
 
@@ -72,67 +68,15 @@ namespace zimmer {
     zimmer::Mean::Mean(double default_value) : default_value(default_value) {}
 
 
-    double zimmer::Mean::processWindow(const TimeSeries &window, const std::string win_type) const {
+    double zimmer::Mean::processWindow(const TimeSeries &window, const WindowType win_type) const {
 
-        if(win_type == "triang"){
-            auto weight = arma::sum(zimmer::triang(window.size()));
+        if(win_type == WindowType::triang){
+            auto weight = arma::sum(zimmer::numc::triang(window.size()));
             return arma::sum(window.finiteValues()) / weight;
         } else {
             return arma::sum(window.finiteValues()) / window.finiteSize();
         }
     }
-
-
-    template<typename T> arma::vec arange(T start, T stop, T step) {
-        // Equivalent to numpy arange
-
-        std::vector<T> vals;
-
-        for (T value = start; value < stop; value += step)
-            vals.push_back(value);
-
-        return arma::conv_to< arma::colvec >::from(vals);
-    }
-
-    arma::vec triang(int M, bool sym) {
-        /* Same implementation as scipy.signal */
-
-        if(M <= 0){
-            return arma::vec({});
-        }
-
-        if(M <= 1){
-            // Handle small arrays
-            return arma::vec({1.0});
-        }
-
-        arma::vec w;
-        arma::vec n = arange<double>(1, floor((M+1) / 2.0) + 1);
-
-        if(sym == false){
-            M = M + 1;
-        }
-
-        if (M % 2 == 0) {
-            w = (2 * n - 1.0) / M;
-            w = arma::join_vert(w, arma::flipud(w));
-        } else {
-            w = 2 * n / (M + 1.0);
-            arma::vec w_inv = arma::flipud(w);
-            arma::vec pos = arange<int>(1, w_inv.size());
-            w = arma::join_vert(w, w_inv.elem(arma::conv_to<arma::uvec>::from(pos)));
-        }
-
-        if(sym == false){
-            arma::vec pos = arange<int>(0, w.size() - 1);
-            return w.elem(arma::conv_to<arma::uvec>::from(pos));
-        } else{
-            return w;
-        }
-
-    }
-
-
 
 } // zimmer
 
@@ -231,62 +175,11 @@ TimeSeries TimeSeries::operator*(const double &rhs) const {
 }
 
 
-// compare two vecs, taking account of NANs (normal comparison operators don't give true for NAN == NAN)
-bool equal_handling_nans(const arma::vec &lhs, const arma::vec &rhs) {
-
-    //assert(lhs.n_cols == 1 && rhs.n_cols == 1);
-
-    if ((lhs.n_rows != rhs.n_rows)) return false;
-    if ((lhs.n_cols != rhs.n_cols)) return false;
-
-    for (arma::uword idx = 0; idx < lhs.n_rows; idx++) {
-        if (lhs[idx] != rhs[idx] && !(isnan(lhs[idx]) && isnan(rhs[idx]))) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-
-// todo; this will have bugs, replace with AlmostEquals from Google Test if used for anything but test comparisons!
-#define EPSILON  (1.0E-150)
-#define VERYSMALL    (1.0E-8)
-
-bool AlmostEqual(double a, double b) {
-    double absDiff = fabs(a - b);
-    if (absDiff < EPSILON) {
-        return true;
-    }
-
-    double maxAbs = fmax(fabs(a), fabs(b));
-    return (absDiff / maxAbs) < VERYSMALL;
-}
-
-
-// compare two vecs, taking account of NANs (normal comparison operators don't give true for NAN == NAN)
-bool almost_equal_handling_nans(const arma::vec &lhs, const arma::vec &rhs) {
-
-    //assert(lhs.n_cols == 1 && rhs.n_cols == 1);
-
-    if ((lhs.n_rows != rhs.n_rows)) return false;
-    if ((lhs.n_cols != rhs.n_cols)) return false;
-
-    for (arma::uword idx = 0; idx < lhs.n_rows; idx++) {
-        if (!(isnan(lhs[idx]) && isnan(rhs[idx])) && !AlmostEqual(lhs[idx], rhs[idx])) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-
 // todo; do we need a flavor that *doesn't* take account of NANs?
 bool TimeSeries::equals(const TimeSeries &rhs) const {
     if ((timestamps().n_rows != rhs.timestamps().n_rows)) return false;
     if ((timestamps().n_cols != rhs.timestamps().n_cols)) return false;
-    if (!equal_handling_nans(values(), rhs.values())) return false;
+    if (!zimmer::numc::equal_handling_nans(values(), rhs.values())) return false;
     if (any(timestamps() != rhs.timestamps())) return false;
     return true;
 }
@@ -296,7 +189,7 @@ bool TimeSeries::equals(const TimeSeries &rhs) const {
 bool TimeSeries::almost_equals(const TimeSeries &rhs) const {
     if ((timestamps().n_rows != rhs.timestamps().n_rows)) return false;
     if ((timestamps().n_cols != rhs.timestamps().n_cols)) return false;
-    if (!almost_equal_handling_nans(values(), rhs.values())) return false;
+    if (!zimmer::numc::almost_equal_handling_nans(values(), rhs.values())) return false;
     if (any(timestamps() != rhs.timestamps())) return false;
     return true;
 }
@@ -333,7 +226,7 @@ TimeSeries TimeSeries::abs() const {
 // todo; allow passing in transformation function rather than WindowProcessor.
 TimeSeries
 TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &processor, SeriesSize minPeriods,
-                    bool center, bool symmetric, std::string win_type) const {
+                    bool center, bool symmetric, zimmer::WindowProcessor::WindowType win_type) const {
 
     //assert(center); // todo; implement center:false
     //assert(windowSize > 0);
@@ -379,12 +272,12 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
 
         arma::vec values = v.subvec(leftIdx, rightIdx);
 
-        if(win_type == "triang"){
+        if(win_type == zimmer::WindowProcessor::WindowType::triang){
 
-            auto weights = zimmer::triang(windowSize);
-            std::vector<double> ext = arma::conv_to< std::vector<double> >::from(weights);
+            auto weights = zimmer::numc::triang(windowSize);
 
-            for (int i = 0; i <= values.size(); i += 1){
+            for (int i = 0; i < values.size(); i += 1){
+                // When at edges, size of weights and values not the same so can't use % operator
                 values[i] = weights.at(i) * values[i];
             }
         }
@@ -392,6 +285,8 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
         const TimeSeries subSeries = TimeSeries(t.subvec(leftIdx, rightIdx), values);
 
         if (subSeries.finiteSize() >= minPeriods) {
+            std::vector<double> ext = arma::conv_to< std::vector<double> >::from(subSeries.values());
+
             resultv(centerIdx) = processor.processWindow(subSeries, win_type);
         } else {
             resultv(centerIdx) = processor.defaultValue();

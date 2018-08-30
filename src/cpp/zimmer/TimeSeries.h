@@ -5,37 +5,36 @@
 #ifndef ZIMMER_TIME_SERIES_H
 #define ZIMMER_TIME_SERIES_H
 
+#include <cassert>
 #include <vector>
-
+#include <cmath>
 #include "armadillo"
 
-#include <cassert>
 
 class TimeSeries;
 
-bool AlmostEqual(double a, double b);
-bool equal_handling_nans(const arma::vec &lhs, const arma::vec &rhs);
-bool almost_equal_handling_nans(const arma::vec &lhs, const arma::vec &rhs);
-
 namespace zimmer {
-
-    template<typename T>
-    arma::vec arange(T start, T stop, T step = 1);
-
-    arma::vec triang(int M, bool sym = true);
 
     class WindowProcessor {
     public:
-        virtual double processWindow(const TimeSeries &window, const std::string win_type = "None") const = 0;
+
+        enum class WindowType {
+            none,
+            triang
+        };
+
+        virtual double processWindow(const TimeSeries &window, const WindowType win_type) const = 0;
 
         virtual double defaultValue() const = 0;
+
+
     };
 
     class Quantile : public WindowProcessor {
     public:
         Quantile(double quantile);
 
-        double processWindow(const TimeSeries &window, const std::string win_type = "None") const;
+        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none) const;
 
         inline double defaultValue() const {
             return NAN;
@@ -52,7 +51,7 @@ namespace zimmer {
     public:
         Sum() = default;
 
-        double processWindow(const TimeSeries &window, const std::string win_type = "None") const;
+        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none) const;
 
         inline double defaultValue() const {
             return NAN;
@@ -65,7 +64,7 @@ namespace zimmer {
 
         Count(double default_value);
 
-        double processWindow(const TimeSeries &window, const std::string win_type = "None") const;
+        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none) const;
 
         inline double defaultValue() const {
             return default_value;
@@ -81,7 +80,7 @@ namespace zimmer {
 
         Mean(double default_value);
 
-        double processWindow(const TimeSeries &window, const std::string win_type = "None") const;
+        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none) const;
 
         inline double defaultValue() const {
             return default_value;
@@ -149,7 +148,7 @@ public:
                        SeriesSize minPeriods = 0, /* 0 treated as windowSize */
                        bool center = true,
                        bool symmetric = false,
-                       std::string win_type = "None") const;
+                       zimmer::WindowProcessor::WindowType win_type = zimmer::WindowProcessor::WindowType::none) const;
 
     double mean() const;
 

@@ -6,6 +6,7 @@
 #include "zimmer/TimeSeries.h"
 #include "zimmer/TimeSeriesMask.h"
 #include "zimmer/look_ahead.h"
+#include "zimmer/numc.h"
 
 
 namespace TimeSeriesTests {
@@ -414,27 +415,27 @@ namespace TimeSeriesTests {
 
     TEST(TimeSeries, arange) {
         EXPECT_PRED2(
-            equal_handling_nans,
+            zimmer::numc::equal_handling_nans,
             arma::vec({0,1,2}),
-            zimmer::arange<int>(0,3)
+            zimmer::numc::arange(0,3)
         )  << "Expect " << " should give sequence from start to stop by 1";
 
         EXPECT_PRED2(
-            equal_handling_nans,
+            zimmer::numc::equal_handling_nans,
             arma::vec({0,2,4}),
-            zimmer::arange<int>(0,6,2)
+            zimmer::numc::arange(0,6,2)
         )  << "Expect " << " should give sequence from start to stop by 2";
 
         EXPECT_PRED2(
-            equal_handling_nans,
+            zimmer::numc::equal_handling_nans,
             arma::vec({0}),
-            zimmer::arange<int>(0,1)
+            zimmer::numc::arange(0,1)
         )  << "Expect " << " should return array with 0";
 
         EXPECT_PRED2(
-            equal_handling_nans,
+            zimmer::numc::equal_handling_nans,
             arma::vec({0., 2.5, 5., 7.5}),
-            zimmer::arange<double>(0, 10, 2.5)
+            zimmer::numc::arange(0, 10, 2.5)
         )  << "Expect " << " should work for doubles";
 
     }
@@ -442,45 +443,45 @@ namespace TimeSeriesTests {
     TEST(TimeSeries, triang){
 
         EXPECT_PRED2(
-            equal_handling_nans,
+            zimmer::numc::equal_handling_nans,
             arma::vec({0.5, 1., 0.5}),
-            zimmer::triang(3)
+            zimmer::numc::triang(3)
         ) << "Expect " << " generate symmetric window of 3";
 
         EXPECT_PRED2(
-                equal_handling_nans,
+                zimmer::numc::equal_handling_nans,
                 arma::vec({0.25, 0.75, 0.75}),
-                zimmer::triang(3, false)
+                zimmer::numc::triang(3, false)
         ) << "Expect " << " generate non-symmetric window of 3";
 
         EXPECT_PRED2(
-                almost_equal_handling_nans,
+                zimmer::numc::almost_equal_handling_nans,
                 arma::vec({0.33333333, 0.66666667, 1., 0.66666667, 0.33333333}),
-                zimmer::triang(5)
+                zimmer::numc::triang(5)
         ) << "Expect " << " generate symmetric window of 5";
 
         EXPECT_PRED2(
-                almost_equal_handling_nans,
+                zimmer::numc::almost_equal_handling_nans,
                 arma::vec({0.16666666666666666, 0.5000, 0.83333333333333337, 0.83333333333333337, 0.5000}),
-                zimmer::triang(5, false)
+                zimmer::numc::triang(5, false)
         ) << "Expect " << " generate non-symmetric window of 5";
 
         EXPECT_PRED2(
-                equal_handling_nans,
+                zimmer::numc::equal_handling_nans,
                 arma::vec({1}),
-                zimmer::triang(1)
+                zimmer::numc::triang(1)
         ) << "Expect " << " return array with 1";
 
         EXPECT_PRED2(
-                equal_handling_nans,
+                zimmer::numc::equal_handling_nans,
                 arma::vec({1}),
-                zimmer::triang(1, false)
+                zimmer::numc::triang(1, false)
         ) << "Expect " << " return array with 1";
 
         EXPECT_PRED2(
-                equal_handling_nans,
+                zimmer::numc::equal_handling_nans,
                 arma::vec({}),
-                zimmer::triang(0)
+                zimmer::numc::triang(0)
         ) << "Expect " << " return empty array";
     }
 
@@ -488,25 +489,31 @@ namespace TimeSeriesTests {
     TEST(TimeSeries, rolling_sum_triangle) {
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries().rolling(5, zimmer::Sum(),  0, true, false, "triang"),
+                TimeSeries().rolling(5, zimmer::Sum(),  0, true, false, zimmer::WindowProcessor::WindowType::triang),
                 TimeSeries()
         ) << "Expect " << "empty TimeSeries returns empty TimeSeries";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(1, zimmer::Sum(), 0, true, false, "triang"),
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(1, zimmer::Sum(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN})
         ) << "Expect " << "with a window of 1 the timeseries is returned as is";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Sum(), 0, true, false, "triang"),
+                TimeSeries({1, 2, 3}, {1, 2, 3}).rolling(2, zimmer::Sum(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries({1, 2, 3}, {NAN, 1.5, 2.5})
+        ) << "Expect " << "with a window of 2";
+
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Sum(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {NAN,  4.25, 4.0, NAN, NAN})
         ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should be the sum, not NAN";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Sum(), 2, true, false, "triang"),
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Sum(), 2, true, false, zimmer::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {2.5, 4.25, 4.0, 0.75, NAN})
         ) << "Expect " << "with window=3, min_periods=2 the edge values should be NAN and the rest should sum the windows";
     }
@@ -514,25 +521,25 @@ namespace TimeSeriesTests {
     TEST(TimeSeries, rolling_mean_triangle) {
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries().rolling(5, zimmer::Mean(),  0, true, false, "triang"),
+                TimeSeries().rolling(5, zimmer::Mean(),  0, true, false, zimmer::WindowProcessor::WindowType::triang),
                 TimeSeries()
         ) << "Expect " << "empty TimeSeries returns empty TimeSeries";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(1, zimmer::Mean(), 0, true, false, "triang"),
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(1, zimmer::Mean(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN})
         ) << "Expect " << "with a window of 1 the timeseries is returned as is";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3}, {1, 2, 3}).rolling(3, zimmer::Mean(), 0, true, false, "triang"),
+                TimeSeries({1, 2, 3}, {1, 2, 3}).rolling(3, zimmer::Mean(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3}, {NAN, 2, NAN})
         ) << "Expect " << "with a window of 3 the timeseries of length 3 returns just central value";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Mean(), 0, true, false, "triang"),
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Mean(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {NAN,  2.125, 2.0, NAN, NAN})
         ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should give weighted mean, not NAN";
     }
