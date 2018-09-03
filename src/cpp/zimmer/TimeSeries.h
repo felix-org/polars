@@ -23,7 +23,7 @@ namespace zimmer {
             triang
         };
 
-        virtual double processWindow(const TimeSeries &window, const WindowType win_type) const = 0;
+        virtual double processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const = 0;
 
         virtual double defaultValue() const = 0;
 
@@ -34,7 +34,7 @@ namespace zimmer {
     public:
         Quantile(double quantile);
 
-        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none) const;
+        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none, const arma::vec weights = {}) const;
 
         inline double defaultValue() const {
             return NAN;
@@ -51,7 +51,7 @@ namespace zimmer {
     public:
         Sum() = default;
 
-        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none) const;
+        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none, const arma::vec weights = {}) const;
 
         inline double defaultValue() const {
             return NAN;
@@ -64,7 +64,7 @@ namespace zimmer {
 
         Count(double default_value);
 
-        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none) const;
+        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none, const arma::vec weights = {}) const;
 
         inline double defaultValue() const {
             return default_value;
@@ -80,7 +80,7 @@ namespace zimmer {
 
         Mean(double default_value);
 
-        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none) const;
+        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none, const arma::vec weights = {}) const;
 
         inline double defaultValue() const {
             return default_value;
@@ -141,6 +141,8 @@ public:
 
     TimeSeries abs() const;
 
+    TimeSeries clip(double lower_limit, double upper_limit) const;
+
     TimeSeries pow(double power) const;
 
     TimeSeries rolling(SeriesSize windowSize,
@@ -149,6 +151,8 @@ public:
                        bool center = true,
                        bool symmetric = false,
                        zimmer::WindowProcessor::WindowType win_type = zimmer::WindowProcessor::WindowType::none) const;
+
+    TimeSeries apply(double (*f)(double)) const;
 
     double mean() const;
 

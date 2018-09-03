@@ -108,7 +108,27 @@ namespace TimeSeriesTests {
 
         EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({}), arma::vec({})).pow(2),
                      TimeSeries(arma::vec({}), arma::vec({})))
-                            << "Expect " << "exmpty timeseries pow() fixture result to be correct" << "";
+                            << "Expect " << "empty timeseries pow() fixture result to be correct" << "";
+    }
+
+    TEST(TimeSeries, clipTest) {
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries(arma::vec({}), arma::vec({})).clip(0,1),
+                TimeSeries(arma::vec({}), arma::vec({}))
+        )  << "Expect " << "empty TimeSeries";
+
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries(arma::vec({1,2,3,4}), arma::vec({1,2,3,4})).clip(2,3),
+                TimeSeries(arma::vec({1,2,3,4}), arma::vec({2,2,3,3}))
+        ) << "Expect " << "timeseries clipped to 2-3";
+
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries(arma::vec({1,2,3,4}), arma::vec({1,2,3,4})).clip(0,1),
+                TimeSeries(arma::vec({1,2,3,4}), arma::vec({1,1,1,1}))
+        ) << "Expect " << "timeseries clipped to 2-3";
     }
 
     TEST(TimeSeries, MeanTest) {
@@ -414,6 +434,33 @@ namespace TimeSeriesTests {
     }
 
 
+    TEST(TimeSeries, apply){
+        EXPECT_PRED2(
+             TimeSeries::equal,
+             TimeSeries({1, 2, 3}, {1., 2., 3.}),
+             TimeSeries({1, 2, 3}, {1., 2., 3.}).apply(abs)
+        ) << "Expect " << " should remain ideantical";
+
+        EXPECT_PRED2(
+             TimeSeries::equal,
+             TimeSeries({1, 2, 3}, {1., 2., 3.}),
+             TimeSeries({1, 2, 3}, {-1., -2., -3.}).apply(abs)
+        ) << "Expect " << " should flip signs";
+
+        EXPECT_PRED2(
+             TimeSeries::equal,
+             TimeSeries({1, 2, 3}, {2.7182818284590451, 7.3890560989306504, 20.085536923187668}),
+             TimeSeries({1, 2, 3}, {1., 2., 3.}).apply(exp)
+        ) << "Expect " << " should apply exponential";
+
+        EXPECT_PRED2(
+             TimeSeries::equal,
+             TimeSeries({1, 2, 3, 4}, {0, 0.19, 1.9, 1.9}).apply(exp),
+             TimeSeries({1, 2, 3, 4}, {1., 1.2092495976572515, 6.6858944422792685, 6.6858944422792685})
+        ) << "Expect " << " should apply exponential";
+
+    }
+
     TEST(TimeSeries, rolling_sum_triangle) {
         EXPECT_PRED2(
                 TimeSeries::equal,
@@ -442,7 +489,7 @@ namespace TimeSeriesTests {
         EXPECT_PRED2(
                 TimeSeries::equal,
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Sum(), 2, true, false, zimmer::WindowProcessor::WindowType::triang),
-                TimeSeries({1, 2, 3, 4, 5}, {2.5, 4.25, 4.0, 0.75, NAN})
+                TimeSeries({1, 2, 3, 4, 5}, {2, 4.25, 4.0, 0.75, NAN})
         ) << "Expect " << "with window=3, min_periods=2 the edge values should be NAN and the rest should sum the windows";
     }
 
@@ -470,5 +517,11 @@ namespace TimeSeriesTests {
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Mean(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {NAN,  2.125, 2.0, NAN, NAN})
         ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should give weighted mean, not NAN";
+
+        EXPECT_PRED2(
+                TimeSeries::almost_equal,
+                TimeSeries({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(5, zimmer::Mean(), 1, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries({1, 2, 3, 4}, {1.66666667, 2.25, 2.75, 3.33333333})
+        ) << "Expect " << "no NANs because min periods is 1.";
     }
 } // namespace TimeSeriesTests

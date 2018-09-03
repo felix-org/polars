@@ -37,7 +37,7 @@ namespace zimmer {
     }
 
 
-    double Quantile::processWindow(const TimeSeries &window, const WindowType win_type) const {
+    double Quantile::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
         arma::vec v = sort(window.finiteValues());
         // note, this is based on how q works in python numpy percentile rather than the more usual quantile defn.
         double quantilePosition = quantile * ((double) v.size() - 1);
@@ -52,7 +52,7 @@ namespace zimmer {
     }
 
 
-    double zimmer::Sum::processWindow(const TimeSeries &window, const WindowType win_type) const {
+    double zimmer::Sum::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
         return arma::sum(window.finiteValues());
     }
 
@@ -60,7 +60,7 @@ namespace zimmer {
     zimmer::Count::Count(double default_value) : default_value(default_value) {}
 
 
-    double zimmer::Count::processWindow(const TimeSeries &window, const WindowType win_type) const {
+    double zimmer::Count::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
         return window.finiteSize();
     }
 
@@ -68,11 +68,10 @@ namespace zimmer {
     zimmer::Mean::Mean(double default_value) : default_value(default_value) {}
 
 
-    double zimmer::Mean::processWindow(const TimeSeries &window, const WindowType win_type) const {
+    double zimmer::Mean::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
 
         if(win_type == WindowType::triang){
-            auto weight = arma::sum(zimmer::numc::triang(window.size()));
-            return arma::sum(window.finiteValues()) / weight;
+            return arma::sum(window.finiteValues())/ arma::sum(weights);
         } else {
             return arma::sum(window.finiteValues()) / window.finiteSize();
         }
@@ -272,22 +271,31 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
 
         arma::vec values = v.subvec(leftIdx, rightIdx);
 
+        // Define weights vector required for specific windows
+        arma::vec weights;
+        weights.copy_size(values);
+
         if(win_type == zimmer::WindowProcessor::WindowType::triang){
 
-            auto weights = zimmer::numc::triang(windowSize);
+            auto triang_weights = zimmer::numc::triang(windowSize);
 
             for (int i = 0; i < values.size(); i += 1){
-                // When at edges, size of weights and values not the same so can't use % operator
-                values[i] = weights.at(i) * values[i];
+                arma::sword lset = centerIdx - centerOffset;
+
+                if(lset <= 0){
+                    weights[i] = triang_weights.at(i - lset);
+                    values[i] = triang_weights.at(i - lset) * values[i];
+                } else {
+                    weights[i] = triang_weights.at(i);
+                    values[i] = triang_weights.at(i) * values[i];
+                }
             }
         }
 
         const TimeSeries subSeries = TimeSeries(t.subvec(leftIdx, rightIdx), values);
 
         if (subSeries.finiteSize() >= minPeriods) {
-            std::vector<double> ext = arma::conv_to< std::vector<double> >::from(subSeries.values());
-
-            resultv(centerIdx) = processor.processWindow(subSeries, win_type);
+            resultv(centerIdx) = processor.processWindow(subSeries, win_type, weights);
         } else {
             resultv(centerIdx) = processor.defaultValue();
         }
@@ -295,6 +303,13 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
 
     return TimeSeries(t, resultv);
 }
+
+
+TimeSeries TimeSeries::clip(double lower_limit, double upper_limit) const {
+    TimeSeriesMask upper = TimeSeriesMask(timestamps(), values() < upper_limit);
+    TimeSeriesMask lower = TimeSeriesMask(timestamps(), values() > lower_limit);
+    return TimeSeries(timestamps(),values()).where(upper, upper_limit).where(lower, lower_limit);
+};
 
 
 TimeSeries TimeSeries::pow(double power) const {
@@ -353,6 +368,12 @@ bool TimeSeries::almost_equal(const TimeSeries &lhs, const TimeSeries &rhs) {
 
 bool TimeSeries::not_equal(const TimeSeries &lhs, const TimeSeries &rhs) {
     return !lhs.equals(rhs);
+}
+
+TimeSeries TimeSeries::apply(double (*f)(double)) const {
+    arma::vec vals = values();
+    vals.transform([=](double val){return (f(val));});
+    return TimeSeries(timestamps(), vals);
 }
 
 
