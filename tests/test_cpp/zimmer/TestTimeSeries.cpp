@@ -182,6 +182,14 @@ namespace TimeSeriesTests {
                      TimeSeries(arma::vec({1, 2, 3}), arma::vec({10, NAN, 5})).rolling(3, zimmer::Quantile(0.5), 2, true))
                             << "Expect " << "rolling() test 2 for minperiods, with nans" << "";
 
+        EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({1, 2, 3}), arma::vec({1, 1, 1})),
+                     TimeSeries(arma::vec({1, 2, 3}), arma::vec({1, NAN, 1})).rolling(3, zimmer::Quantile(0.5), 1, true))
+                            << "Expect " << "series of size 3, rolling window of 3" << "";
+
+        EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({1, 2, 3}), arma::vec({1, 0.5, 1})),
+                     TimeSeries(arma::vec({1, 2, 3}), arma::vec({1, NAN, 1})).rolling(
+                             3, zimmer::Quantile(0.5), 1, true, false, zimmer::WindowProcessor::WindowType::triang))
+                            << "Expect " << "series of size 3, rolling window of 3 with triang weights (0.5,1,0.5)" << "";
     }
 
 
@@ -249,7 +257,7 @@ namespace TimeSeriesTests {
                 TimeSeries({1, 2, 3, 4, 5}, {2, 3, 2, 1, 0})
         ) << "Expect " << "with window=3, min_periods=1 and a default of 0, all windows should have a count";
 
-        // Symmetric = True
+        // Symmetric = True - Odd array with odd window works (e.g. array of 5 with window of 3)
         EXPECT_PRED2(
                 TimeSeries::equal,
                 TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}).rolling(3, zimmer::Count(), 1, true, true),
@@ -261,6 +269,20 @@ namespace TimeSeriesTests {
                 TimeSeries({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(7, zimmer::Count(), 1, true, true),
                 TimeSeries({1, 2, 3, 4, 5, 6}, {1, 3, 5, 5, 3, 1})
         ) << "Expect " << "with window of 7 the timeseries expects smaller and smaller counts along the edges";
+
+        // Even array with odd window
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(3, zimmer::Count(), 1, true, true),
+                TimeSeries({1, 2, 3, 4, 5, 6}, {1, 3, 3, 3, 3, 1})
+        ) << "Expect " << "with an even array, weighting still works out.";
+
+        // Even array with odd window
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(5, zimmer::Count(), 1, true, true),
+                TimeSeries({1, 2, 3, 4, 5, 6}, {1, 3, 5, 5, 3, 1})
+        ) << "Expect " << "with an odd window of comparable size, edges still small";
     }
 
     TEST(TimeSeries, operator__add) {
@@ -468,7 +490,7 @@ namespace TimeSeriesTests {
                 TimeSeries()
         ) << "Expect " << "empty TimeSeries returns empty TimeSeries";
 
-        EXPECT_PRED2(
+       EXPECT_PRED2(
                 TimeSeries::equal,
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(1, zimmer::Sum(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN})

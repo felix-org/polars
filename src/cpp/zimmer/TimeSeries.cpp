@@ -38,9 +38,18 @@ namespace zimmer {
 
 
     double Quantile::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
-        arma::vec v = sort(window.finiteValues());
+
+        arma::vec v;
+        if(win_type == WindowType::triang){
+            v = weights % window.values();
+            v = sort(v.elem(arma::find_finite(v)));
+        } else{
+            v = sort(window.finiteValues());
+        }
+
         // note, this is based on how q works in python numpy percentile rather than the more usual quantile defn.
         double quantilePosition = quantile * ((double) v.size() - 1);
+
         if (double_is_int(quantilePosition)) {
             return v(quantilePosition);
         } else {
@@ -53,7 +62,12 @@ namespace zimmer {
 
 
     double zimmer::Sum::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
-        return arma::sum(window.finiteValues());
+
+        if(win_type == WindowType::triang){
+            return zimmer::numc::sum_finite((weights % window.values()));
+        } else {
+            return arma::sum(window.finiteValues());
+        }
     }
 
 
@@ -71,7 +85,10 @@ namespace zimmer {
     double zimmer::Mean::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
 
         if(win_type == WindowType::triang){
-            return arma::sum(window.finiteValues())/ arma::sum(weights);
+
+            arma::vec weighted_values = window.values() % weights;
+
+            return zimmer::numc::sum_finite(weighted_values)/ arma::sum(weights);
         } else {
             return arma::sum(window.finiteValues()) / window.finiteSize();
         }
@@ -229,7 +246,7 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
 
     //assert(center); // todo; implement center:false
     //assert(windowSize > 0);
-    //assert(windowSize % 2 == 0); // TODO: Make symmetric = true and even windows work!
+    //assert(windowSize % 2 == 0); // TODO: Make symmetric = true work for even windows. See tests for reference.
 
     if (minPeriods == 0) {
         minPeriods = windowSize;
@@ -247,7 +264,7 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
         arma::sword rightIdx = centerIdx - centerOffset + windowSize - 1;
 
         if (symmetric) {
-            // Estimate windows available:
+            // This option works for odd windows only.
             if (leftIdx < 0){
                 rightIdx = centerIdx + centerOffset + leftIdx;
                 leftIdx = 0;
@@ -280,14 +297,12 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
             auto triang_weights = zimmer::numc::triang(windowSize);
 
             for (int i = 0; i < values.size(); i += 1){
-                arma::sword lset = centerIdx - centerOffset;
+                arma::sword left_offset = centerIdx - centerOffset;
 
-                if(lset <= 0){
-                    weights[i] = triang_weights.at(i - lset);
-                    values[i] = triang_weights.at(i - lset) * values[i];
+                if(left_offset <= 0){
+                    weights[i] = triang_weights.at(i - left_offset);
                 } else {
                     weights[i] = triang_weights.at(i);
-                    values[i] = triang_weights.at(i) * values[i];
                 }
             }
         }

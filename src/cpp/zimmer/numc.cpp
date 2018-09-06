@@ -61,6 +61,10 @@ namespace zimmer {
             return arma::regspace(start, step, stop-step);
         }
 
+        double sum_finite(const arma::vec &series){
+            return arma::sum(series.elem(arma::find_finite(series)));
+        }
+
 
         arma::vec triang(int M, bool sym) {
             /* Same implementation as scipy.signal */

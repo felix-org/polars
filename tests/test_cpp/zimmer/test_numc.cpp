@@ -6,7 +6,7 @@
 #include "zimmer/numc.h"
 
 
-TEST(TimeSeries, arange) {
+TEST(numc, arange) {
     EXPECT_PRED2(
             zimmer::numc::equal_handling_nans,
             arma::vec({0,1,2}),
@@ -33,7 +33,14 @@ TEST(TimeSeries, arange) {
 
 }
 
-TEST(TimeSeries, triang){
+TEST(numc, sum_finite){
+    EXPECT_EQ(0, zimmer::numc::sum_finite({})) << "Expect " << " zero since empty array";
+    EXPECT_EQ(arma::sum(arma::vec({1, 2, 3})), zimmer::numc::sum_finite(arma::vec({1, 2, 3})))
+                        << "Expect " << " same result as sum because no NANs";
+    EXPECT_EQ(3, zimmer::numc::sum_finite(arma::vec({1,2,NAN}))) << "Expect " << " sum of first two terms";
+}
+
+TEST(numc, triang){
 
     EXPECT_PRED2(
             zimmer::numc::equal_handling_nans,

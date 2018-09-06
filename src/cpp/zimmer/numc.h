@@ -24,6 +24,8 @@ namespace zimmer {
 
         arma::vec arange(double start, double stop, double step = 1.);
 
+        double sum_finite(const arma::vec &series);
+
         arma::vec triang(int M, bool sym = true);
 
     } // numc
