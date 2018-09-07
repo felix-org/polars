@@ -262,27 +262,48 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
 
         arma::sword leftIdx = centerIdx - centerOffset;
         arma::sword rightIdx = centerIdx - centerOffset + windowSize - 1;
+        arma::sword weightLeftIdx = 0;
+        arma::sword weightRightIdx = windowSize - 1;
 
         if (symmetric) {
             // This option works for odd windows only.
             if (leftIdx < 0){
-                rightIdx = centerIdx + centerOffset + leftIdx;
-                leftIdx = 0;
+                arma::sword left_err = leftIdx;
+                arma::sword right_err = windowSize - 1 - centerIdx - centerOffset;
+
+                weightLeftIdx = weightLeftIdx - left_err;
+                weightRightIdx = weightRightIdx - right_err;
+
+                rightIdx = rightIdx - right_err;
+                leftIdx = leftIdx - left_err;
             }
 
             if (rightIdx >= size()) {
                 arma::sword r_clipped = rightIdx - size();
-                leftIdx = leftIdx + r_clipped + 1;
-                rightIdx = size() - 1;
+
+                arma::sword left_err = - r_clipped - 1;
+                arma::sword right_err = rightIdx - (size() - 1);
+
+                weightLeftIdx = weightLeftIdx - left_err;
+                weightRightIdx = weightRightIdx - right_err;
+
+                leftIdx = leftIdx - left_err;
+                rightIdx = rightIdx - right_err;
             }
 
         } else {
 
             if (leftIdx < 0) {
-                leftIdx = 0;
+                arma::sword left_err = leftIdx;
+
+                weightLeftIdx = weightLeftIdx - left_err;
+                leftIdx = leftIdx - left_err;
             }
             if (rightIdx >= size()) {
-                rightIdx = size() - 1;
+                arma::sword right_err = rightIdx - (size() - 1);
+
+                weightRightIdx = weightRightIdx - right_err;
+                rightIdx = rightIdx - right_err;
             }
         }
 
@@ -295,16 +316,7 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
         if(win_type == zimmer::WindowProcessor::WindowType::triang){
 
             auto triang_weights = zimmer::numc::triang(windowSize);
-
-            for (int i = 0; i < values.size(); i += 1){
-                arma::sword left_offset = centerIdx - centerOffset;
-
-                if(left_offset <= 0){
-                    weights[i] = triang_weights.at(i - left_offset);
-                } else {
-                    weights[i] = triang_weights.at(i);
-                }
-            }
+            weights = triang_weights.subvec(weightLeftIdx, weightRightIdx);
         }
 
         const TimeSeries subSeries = TimeSeries(t.subvec(leftIdx, rightIdx), values);

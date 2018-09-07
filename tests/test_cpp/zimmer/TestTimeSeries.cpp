@@ -490,7 +490,7 @@ namespace TimeSeriesTests {
                 TimeSeries()
         ) << "Expect " << "empty TimeSeries returns empty TimeSeries";
 
-       EXPECT_PRED2(
+        EXPECT_PRED2(
                 TimeSeries::equal,
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(1, zimmer::Sum(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN})
@@ -546,4 +546,13 @@ namespace TimeSeriesTests {
                 TimeSeries({1, 2, 3, 4}, {1.66666667, 2.25, 2.75, 3.33333333})
         ) << "Expect " << "no NANs because min periods is 1.";
     }
+
+   /* TEST(TimeSeries, test) {
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries({1, 2, 3,4,5}, {1, 2, 3,4,5}).rolling(4, zimmer::Sum(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries({1, 2, 3,4,5}, {NAN, 1.5, 2.5,4.3,5})
+        ) << "Expect " << "with a window of 2";
+
+    }*/
 } // namespace TimeSeriesTests
