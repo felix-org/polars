@@ -104,6 +104,37 @@ namespace zimmer {
             }
         }
 
+        arma::vec exponential(int M, double tau, bool sym){
+            /* Same implementation as scipy.signal */
+
+            if (M < 1) {
+                // TODO: Replace by cassert
+                return arma::vec({});
+            }
+
+            if (M == 1) {
+                // Handle small arrays
+                return arma::vec({1.0});
+            }
+
+            auto odd = M % 2;
+
+            if(sym == false and odd == false){
+                M = M + 1;
+            }
+
+            double center = (M - 1) / 2.0;
+            arma::vec n = arange(0, M);
+            arma::vec w = -1 * abs(n - center) / tau;
+            w.transform( [](double val) { return (exp(val)); } );
+
+            if(sym == false and odd == false){
+                arma::vec pos = arange(0, w.size() - 1);
+                return w.elem(arma::conv_to<arma::uvec>::from(pos));
+            } else {
+                return w;
+            }
+        }
 
     }
 

@@ -85,3 +85,41 @@ TEST(numc, triang){
     ) << "Expect " << " return empty array";
 }
 
+TEST(numc, exponential){
+    EXPECT_PRED2(
+            zimmer::numc::equal_handling_nans,
+            arma::vec({}),
+            zimmer::numc::exponential(0)
+    ) << "Expect " << " return empty array";
+
+    EXPECT_PRED2(
+            zimmer::numc::equal_handling_nans,
+            arma::vec({1}),
+            zimmer::numc::exponential(1)
+    ) << "Expect " << " return array with 1";
+
+    EXPECT_PRED2(
+            zimmer::numc::equal_handling_nans,
+            arma::vec({0.36787944117144233, 0.60653065971263342, 1., 0.60653065971263342, 0.36787944117144233}),
+            zimmer::numc::exponential(5, 2.0, false)
+    ) << "Expect " << " return odd non-symmetric array";
+
+    EXPECT_PRED2(
+            zimmer::numc::equal_handling_nans,
+            arma::vec({0.36787944117144233, 0.60653065971263342, 1., 0.60653065971263342}),
+            zimmer::numc::exponential(4, 2.0, false)
+    ) << "Expect " << " return even non-symmetric array";
+
+    EXPECT_PRED2(
+            zimmer::numc::equal_handling_nans,
+            arma::vec({0.60653065971263342, 0.84648172489061413, 0.84648172489061413, 0.60653065971263342}),
+            zimmer::numc::exponential(4, 3.0)
+    ) << "Expect " << " return even symmetric array";
+
+    EXPECT_PRED2(
+            zimmer::numc::equal_handling_nans,
+            arma::vec({0.51341711903259202, 0.71653131057378927, 1., 0.71653131057378927, 0.51341711903259202}),
+            zimmer::numc::exponential(5, 3.0)
+    ) << "Expect " << " return odd symmetric array";
+
+}
