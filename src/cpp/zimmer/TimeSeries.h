@@ -20,7 +20,8 @@ namespace zimmer {
 
         enum class WindowType {
             none,
-            triang
+            triang,
+            expn
         };
 
         virtual double processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const = 0;
@@ -90,6 +91,7 @@ namespace zimmer {
         double default_value = NAN;
     };
 
+    arma::vec _ewm_correction(const arma::vec &results, const arma::vec &v0, zimmer::WindowProcessor::WindowType win_type);
 
 }  // zimmer
 
@@ -150,7 +152,8 @@ public:
                        SeriesSize minPeriods = 0, /* 0 treated as windowSize */
                        bool center = true,
                        bool symmetric = false,
-                       zimmer::WindowProcessor::WindowType win_type = zimmer::WindowProcessor::WindowType::none) const;
+                       zimmer::WindowProcessor::WindowType win_type = zimmer::WindowProcessor::WindowType::none,
+                       double alpha = -1) const;
 
     TimeSeries apply(double (*f)(double)) const;
 

@@ -104,7 +104,7 @@ namespace zimmer {
             }
         }
 
-        arma::vec exponential(int M, double tau, bool sym){
+        arma::vec exponential(int M, double tau, bool sym, double center){
             /* Same implementation as scipy.signal */
 
             if (M < 1) {
@@ -123,13 +123,17 @@ namespace zimmer {
                 M = M + 1;
             }
 
-            double center = (M - 1) / 2.0;
+            if(sym == true || center == -1){
+                center = (M - 1) / 2.0;
+            }
+
             arma::vec n = arange(0, M);
             arma::vec w = -1 * abs(n - center) / tau;
             w.transform( [](double val) { return (exp(val)); } );
 
             if(sym == false and odd == false){
                 arma::vec pos = arange(0, w.size() - 1);
+                w.elem(arma::conv_to<arma::uvec>::from(pos));
                 return w.elem(arma::conv_to<arma::uvec>::from(pos));
             } else {
                 return w;

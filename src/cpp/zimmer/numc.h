@@ -28,7 +28,7 @@ namespace zimmer {
 
         arma::vec triang(int M, bool sym = true);
 
-        arma::vec exponential(int M, double tau = 1., bool sym = true);
+        arma::vec exponential(int M, double tau = 1., bool sym = true, double center=-1.);
 
     } // numc
 } // zimmer

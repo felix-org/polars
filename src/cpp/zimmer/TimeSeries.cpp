@@ -40,7 +40,7 @@ namespace zimmer {
     double Quantile::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
 
         arma::vec v;
-        if(win_type == WindowType::triang){
+        if(win_type != WindowType::none){
             v = weights % window.values();
             v = sort(v.elem(arma::find_finite(v)));
         } else{
@@ -63,7 +63,7 @@ namespace zimmer {
 
     double zimmer::Sum::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
 
-        if(win_type == WindowType::triang){
+        if(win_type != WindowType::none){
             return zimmer::numc::sum_finite((weights % window.values()));
         } else {
             return arma::sum(window.finiteValues());
@@ -84,12 +84,17 @@ namespace zimmer {
 
     double zimmer::Mean::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
 
-        if(win_type == WindowType::triang){
+        if(win_type == WindowType::expn){
+            // This ensures deals with NAs like pandas for the case ignore_na = False which is the default setting.
+            arma::vec weights_for_sum = weights.elem(arma::find_finite(window.values()));
+            arma::vec weighted_values = window.values() % weights;
+            return zimmer::numc::sum_finite(weighted_values) / arma::sum(weights_for_sum);
+        } else if(win_type != WindowType::none){
 
             arma::vec weighted_values = window.values() % weights;
-
-            return zimmer::numc::sum_finite(weighted_values)/ arma::sum(weights);
-        } else {
+            return zimmer::numc::sum_finite(weighted_values) / arma::sum(weights);
+        }
+        else {
             return arma::sum(window.finiteValues()) / window.finiteSize();
         }
     }
@@ -238,11 +243,36 @@ TimeSeries TimeSeries::abs() const {
     return TimeSeries(timestamps(), arma::abs(values()));
 }
 
+arma::vec zimmer::_ewm_correction(const arma::vec &results, const arma::vec &vals, zimmer::WindowProcessor::WindowType win_type) {
+    /* Method that shifts result from rolling average with exp window so it matches
+     * results in Pandas ewm */
+
+    if(results.n_elem == 0){
+        return arma::vec({});
+    }
+
+    if (win_type == zimmer::WindowProcessor::WindowType::expn) {
+        // Correction to match pandas ewm - shift by one.
+        arma::vec results_ewm;
+        results_ewm.copy_size(results);
+        results_ewm.at(0) = vals[0];
+
+        for (int j = 1; j < results_ewm.n_elem; j++) {
+            results_ewm[j] = results[j - 1];
+        }
+
+        return results_ewm;
+
+    } else {
+        return results;
+    }
+}
+
 
 // todo; allow passing in transformation function rather than WindowProcessor.
 TimeSeries
 TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &processor, SeriesSize minPeriods,
-                    bool center, bool symmetric, zimmer::WindowProcessor::WindowType win_type) const {
+                    bool center, bool symmetric, zimmer::WindowProcessor::WindowType win_type, double alpha) const {
 
     //assert(center); // todo; implement center:false
     //assert(windowSize > 0);
@@ -307,6 +337,7 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
             }
         }
 
+
         arma::vec values = v.subvec(leftIdx, rightIdx);
 
         // Define weights vector required for specific windows
@@ -319,6 +350,10 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
             weights = triang_weights.subvec(weightLeftIdx, weightRightIdx);
         }
 
+        if(win_type == zimmer::WindowProcessor::WindowType::expn){
+            arma::vec expn_weights = reverse(zimmer::numc::exponential(windowSize, -1. / log(1 - alpha), false, 0));
+            weights = expn_weights.subvec(weightLeftIdx, weightRightIdx);
+        }
         const TimeSeries subSeries = TimeSeries(t.subvec(leftIdx, rightIdx), values);
 
         if (subSeries.finiteSize() >= minPeriods) {
@@ -328,7 +363,8 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
         }
     }
 
-    return TimeSeries(t, resultv);
+    return TimeSeries(t, zimmer::_ewm_correction(resultv, v, win_type));
+
 }
 
 

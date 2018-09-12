@@ -104,7 +104,8 @@ TEST(numc, exponential){
             zimmer::numc::exponential(5, 2.0, false)
     ) << "Expect " << " return odd non-symmetric array";
 
-    EXPECT_PRED2(
+
+   EXPECT_PRED2(
             zimmer::numc::equal_handling_nans,
             arma::vec({0.36787944117144233, 0.60653065971263342, 1., 0.60653065971263342}),
             zimmer::numc::exponential(4, 2.0, false)
@@ -122,4 +123,15 @@ TEST(numc, exponential){
             zimmer::numc::exponential(5, 3.0)
     ) << "Expect " << " return odd symmetric array";
 
+    EXPECT_PRED2(
+            zimmer::numc::equal_handling_nans,
+            arma::vec({0.71653131057378927, 1, 0.71653131057378927, 0.51341711903259202, 0.36787944117144233}),
+            zimmer::numc::exponential(5, 3.0, false, 1)
+    ) << "Expect " << " return odd non symmetric and center = 1 array";
+
+    EXPECT_PRED2(
+            zimmer::numc::equal_handling_nans,
+            arma::vec({0.51341711903259202, 0.71653131057378927, 1., 0.71653131057378927, 0.51341711903259202}),
+            zimmer::numc::exponential(5, 3.0, true, 1)
+    ) << "Expect " << " symmetric centered array since center = 1 is override";
 }
