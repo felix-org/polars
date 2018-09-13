@@ -30,5 +30,11 @@ namespace zimmer {
 
         arma::vec exponential(int M, double tau = 1., bool sym = true, double center=-1.);
 
+        bool double_is_int(double v);
+
+        arma::vec quantile(const arma::vec &x, const arma::vec &q);
+
+        double quantile(const arma::vec &x, double q);
+
     } // numc
 } // zimmer

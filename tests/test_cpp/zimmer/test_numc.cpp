@@ -85,6 +85,40 @@ TEST(numc, triang){
     ) << "Expect " << " return empty array";
 }
 
+
+TEST(numc, quantile){
+
+    EXPECT_PRED2(
+            zimmer::numc::equal_handling_nans,
+            arma::vec({}),
+            zimmer::numc::quantile(arma::vec({}), arma::vec({0.5}))
+    ) << "Expect" << " return empty array";
+
+    EXPECT_PRED2(
+            zimmer::numc::equal_handling_nans,
+            arma::vec({1}),
+            zimmer::numc::quantile(arma::vec({1}), arma::vec({0.5}))
+    ) << "Expect" << " return vector with one";
+
+    EXPECT_PRED2(
+            zimmer::numc::equal_handling_nans,
+            arma::vec({1}),
+            zimmer::numc::quantile(arma::vec({1, 1}), arma::vec({0.5}))
+    ) << "Expect" << " return vector with 0.5 quantile (median)";
+
+    EXPECT_PRED2(
+            zimmer::numc::almost_equal_handling_nans,
+            arma::vec({2.7, 4.5}),
+            zimmer::numc::quantile(arma::vec({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}), arma::vec({0.3, 0.5}))
+    ) << "Expect" << " return vector with 0.3 and 0.5 quantiles (median)";
+
+    EXPECT_EQ(
+            zimmer::numc::quantile(arma::vec({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}), 0.5), 4.5
+    ) << "Expect" << " return double median";
+
+}
+
+
 TEST(numc, exponential){
     EXPECT_PRED2(
             zimmer::numc::equal_handling_nans,
@@ -104,8 +138,7 @@ TEST(numc, exponential){
             zimmer::numc::exponential(5, 2.0, false)
     ) << "Expect " << " return odd non-symmetric array";
 
-
-   EXPECT_PRED2(
+    EXPECT_PRED2(
             zimmer::numc::equal_handling_nans,
             arma::vec({0.36787944117144233, 0.60653065971263342, 1., 0.60653065971263342}),
             zimmer::numc::exponential(4, 2.0, false)

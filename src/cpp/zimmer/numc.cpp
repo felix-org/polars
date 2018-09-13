@@ -104,7 +104,7 @@ namespace zimmer {
             }
         }
 
-        arma::vec exponential(int M, double tau, bool sym, double center){
+        arma::vec exponential(int M, double tau, bool sym, double center) {
             /* Same implementation as scipy.signal */
 
             if (M < 1) {
@@ -119,27 +119,73 @@ namespace zimmer {
 
             auto odd = M % 2;
 
-            if(sym == false and odd == false){
+            if (sym == false and odd == false) {
                 M = M + 1;
             }
 
-            if(sym == true || center == -1){
+            if (sym == true || center == -1) {
                 center = (M - 1) / 2.0;
             }
 
             arma::vec n = arange(0, M);
             arma::vec w = -1 * abs(n - center) / tau;
-            w.transform( [](double val) { return (exp(val)); } );
+            w.transform([](double val) { return (exp(val)); });
 
-            if(sym == false and odd == false){
+            if (sym == false and odd == false) {
                 arma::vec pos = arange(0, w.size() - 1);
                 w.elem(arma::conv_to<arma::uvec>::from(pos));
                 return w.elem(arma::conv_to<arma::uvec>::from(pos));
             } else {
                 return w;
+
             }
         }
 
-    }
+        bool double_is_int(double v) {
+            double intpart;
+            return modf(v, &intpart) == 0;
+        }
 
-}
+        arma::vec quantile(const arma::vec &x, const arma::vec &q) {
+
+            if(x.size() < 1){
+                return arma::vec({});
+            }
+
+            arma::vec results;
+            results.copy_size(q);
+
+            arma::vec y = sort(x);
+            arma::vec quantile_pos = q * ((double) x.size() - 1);
+
+            for(int i=0; i < q.size(); i++){
+
+                auto quantilePosition = quantile_pos[i];
+
+                if (double_is_int(quantilePosition)) {
+                    results[i]  = y(quantilePosition);
+                } else {
+                    // interpolate estimate
+                    arma::uword quantileIdx = floor(quantilePosition);
+                    double fraction = quantilePosition - quantileIdx;
+                    results[i] = y(quantileIdx) + (y(quantileIdx + 1) - y(quantileIdx)) * fraction;
+                }
+            }
+
+            return results;
+
+        }
+
+        double quantile(const arma::vec &x, double q) {
+            arma::vec q_vec = arma::vec({q});
+            arma::vec result = quantile(x, q_vec);
+
+            if(!result.is_empty()){
+                return result[0];
+            } else {
+                return NAN;
+            }
+        }
+
+    } // namespace numc
+} // namespace zimmer
