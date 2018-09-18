@@ -544,34 +544,34 @@ namespace TimeSeriesTests {
 
         EXPECT_PRED2(
                 TimeSeries::almost_equal,
-                TimeSeries({1, 2, 3, 4}, {0.1, 0.2, 0.3, 0.4}).rolling(4, zimmer::Mean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
+                TimeSeries({1, 2, 3, 4}, {0.1, 0.2, 0.3, 0.4}).rolling(4, zimmer::ExpMean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
                 TimeSeries({1, 2, 3, 4}, {0.1, 0.16666666666666667, 0.24285714285714284, 0.32666666666666666})
         ) << "Expect " << " first value to be the same as original series.";
 
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries().rolling(4, zimmer::Mean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
+                TimeSeries().rolling(4, zimmer::ExpMean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
                 TimeSeries()
         ) << "Expect " << " empty array back.";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3}, {1, NAN, 3}).rolling(3, zimmer::Mean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
+                TimeSeries({1, 2, 3}, {1, NAN, 3}).rolling(3, zimmer::ExpMean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
                 TimeSeries({1, 2, 3}, {1., 1., 2.6})
         ) << "Expect " << " ignore NANs when computing weights.";
 
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4}, {1, NAN, NAN, 4}).rolling(4, zimmer::Mean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
+                TimeSeries({1, 2, 3, 4}, {1, NAN, NAN, 4}).rolling(4, zimmer::ExpMean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
                 TimeSeries({1, 2, 3, 4}, {1, 1, 1, 3.6666666666666665})
         ) << "Expect " << "with two NANs. This differs from Pandas as it ignores NAN's when computing the weights.";
 
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(4, zimmer::Mean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
+                TimeSeries({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(4, zimmer::ExpMean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
                 TimeSeries({1, 2, 3, 4}, {1, 1.6666666666666667, 2.4285714285714284, 3.2666666666666666})
         ) << "Expect " << "with a window of 4";
     }

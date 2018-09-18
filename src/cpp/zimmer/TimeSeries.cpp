@@ -37,15 +37,11 @@ namespace zimmer {
     }
 
 
-    double Quantile::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
+    double Quantile::processWindow(const TimeSeries &window, const arma::vec weights) const {
 
         arma::vec v;
-        if(win_type != WindowType::none){
-            v = weights % window.values();
-            v = sort(v.elem(arma::find_finite(v)));
-        } else{
-            v = sort(window.finiteValues());
-        }
+        v = weights % window.values();
+        v = sort(v.elem(arma::find_finite(v)));
 
         // note, this is based on how q works in python numpy percentile rather than the more usual quantile defn.
         double quantilePosition = quantile * ((double) v.size() - 1);
@@ -61,20 +57,15 @@ namespace zimmer {
     }
 
 
-    double zimmer::Sum::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
-
-        if(win_type != WindowType::none){
-            return zimmer::numc::sum_finite((weights % window.values()));
-        } else {
-            return arma::sum(window.finiteValues());
-        }
+    double zimmer::Sum::processWindow(const TimeSeries &window, const arma::vec weights) const {
+        return zimmer::numc::sum_finite((weights % window.values()));
     }
 
 
     zimmer::Count::Count(double default_value) : default_value(default_value) {}
 
 
-    double zimmer::Count::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
+    double zimmer::Count::processWindow(const TimeSeries &window, const arma::vec weights) const {
         return window.finiteSize();
     }
 
@@ -82,21 +73,17 @@ namespace zimmer {
     zimmer::Mean::Mean(double default_value) : default_value(default_value) {}
 
 
-    double zimmer::Mean::processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const {
+    double zimmer::Mean::processWindow(const TimeSeries &window, const arma::vec weights) const {
+        // This method doesn't support exponential window so results will be faulty. Please use ExpMean instead.
+        arma::vec weighted_values = window.values() % weights;
+        return zimmer::numc::sum_finite(weighted_values) / arma::sum(weights);
+    }
 
-        if(win_type == WindowType::expn){
-            // This ensures deals with NAs like pandas for the case ignore_na = False which is the default setting.
-            arma::vec weights_for_sum = weights.elem(arma::find_finite(window.values()));
-            arma::vec weighted_values = window.values() % weights;
-            return zimmer::numc::sum_finite(weighted_values) / arma::sum(weights_for_sum);
-        } else if(win_type != WindowType::none){
-
-            arma::vec weighted_values = window.values() % weights;
-            return zimmer::numc::sum_finite(weighted_values) / arma::sum(weights);
-        }
-        else {
-            return arma::sum(window.finiteValues()) / window.finiteSize();
-        }
+    double zimmer::ExpMean::processWindow(const TimeSeries &window, const arma::vec weights) const {
+        // This ensures deals with NAs like pandas for the case ignore_na = False which is the default setting.
+        arma::vec weights_for_sum = weights.elem(arma::find_finite(window.values()));
+        arma::vec weighted_values = window.values() % weights;
+        return zimmer::numc::sum_finite(weighted_values) / arma::sum(weights_for_sum);
     }
 
 } // zimmer
@@ -243,9 +230,29 @@ TimeSeries TimeSeries::abs() const {
     return TimeSeries(timestamps(), arma::abs(values()));
 }
 
+
+arma::vec zimmer::calculate_non_linear_weights(
+        zimmer::WindowProcessor::WindowType win_type,
+        arma::uword windowSize,
+        double alpha
+) {
+    switch(win_type){
+        case(zimmer::WindowProcessor::WindowType::none):
+            return arma::ones(windowSize);
+        case(zimmer::WindowProcessor::WindowType::triang):
+            return zimmer::numc::triang(windowSize);
+        case(zimmer::WindowProcessor::WindowType::expn):
+            return reverse(zimmer::numc::exponential(windowSize, -1. / log(1 - alpha), false, 0));
+        default:
+            return arma::ones(windowSize);
+    }
+}
+
+
 arma::vec zimmer::_ewm_correction(const arma::vec &results, const arma::vec &vals, zimmer::WindowProcessor::WindowType win_type) {
-    /* Method that shifts result from rolling average with exp window so it matches
-     * results in Pandas ewm */
+    /* Method that shifts result from rolling average with exp window so it yields correct normalisation and allows usage
+     * of rolling method hereby implemented.
+     * This matches pandas ewm for its default case */
 
     if(results.n_elem == 0){
         return arma::vec({});
@@ -343,21 +350,12 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
         // Define weights vector required for specific windows
         arma::vec weights;
         weights.copy_size(values);
+        weights = zimmer::calculate_non_linear_weights(win_type, windowSize, alpha).subvec(weightLeftIdx, weightRightIdx);
 
-        if(win_type == zimmer::WindowProcessor::WindowType::triang){
-
-            auto triang_weights = zimmer::numc::triang(windowSize);
-            weights = triang_weights.subvec(weightLeftIdx, weightRightIdx);
-        }
-
-        if(win_type == zimmer::WindowProcessor::WindowType::expn){
-            arma::vec expn_weights = reverse(zimmer::numc::exponential(windowSize, -1. / log(1 - alpha), false, 0));
-            weights = expn_weights.subvec(weightLeftIdx, weightRightIdx);
-        }
         const TimeSeries subSeries = TimeSeries(t.subvec(leftIdx, rightIdx), values);
 
         if (subSeries.finiteSize() >= minPeriods) {
-            resultv(centerIdx) = processor.processWindow(subSeries, win_type, weights);
+            resultv(centerIdx) = processor.processWindow(subSeries, weights);
         } else {
             resultv(centerIdx) = processor.defaultValue();
         }

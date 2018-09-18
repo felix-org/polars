@@ -13,6 +13,7 @@
 
 class TimeSeries;
 
+
 namespace zimmer {
 
     class WindowProcessor {
@@ -24,18 +25,19 @@ namespace zimmer {
             expn
         };
 
-        virtual double processWindow(const TimeSeries &window, const WindowType win_type, const arma::vec weights) const = 0;
+        virtual double processWindow(const TimeSeries &window, const arma::vec weights) const = 0;
 
         virtual double defaultValue() const = 0;
 
 
     };
 
+
     class Quantile : public WindowProcessor {
     public:
         Quantile(double quantile);
 
-        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none, const arma::vec weights = {}) const;
+        double processWindow(const TimeSeries &window, const arma::vec weights = {}) const;
 
         inline double defaultValue() const {
             return NAN;
@@ -52,7 +54,7 @@ namespace zimmer {
     public:
         Sum() = default;
 
-        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none, const arma::vec weights = {}) const;
+        double processWindow(const TimeSeries &window, const arma::vec weights = {}) const;
 
         inline double defaultValue() const {
             return NAN;
@@ -65,7 +67,7 @@ namespace zimmer {
 
         Count(double default_value);
 
-        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none, const arma::vec weights = {}) const;
+        double processWindow(const TimeSeries &window, const arma::vec weights = {}) const;
 
         inline double defaultValue() const {
             return default_value;
@@ -81,7 +83,7 @@ namespace zimmer {
 
         Mean(double default_value);
 
-        double processWindow(const TimeSeries &window, const WindowType win_type = WindowType::none, const arma::vec weights = {}) const;
+        double processWindow(const TimeSeries &window, const arma::vec weights = {}) const;
 
         inline double defaultValue() const {
             return default_value;
@@ -90,6 +92,22 @@ namespace zimmer {
     private:
         double default_value = NAN;
     };
+
+    class ExpMean : public WindowProcessor {
+    public:
+        ExpMean() = default;
+
+        double processWindow(const TimeSeries &window, const arma::vec weights = {}) const;
+
+        inline double defaultValue() const {
+            return default_value;
+        }
+
+    private:
+        double default_value = NAN;
+    };
+
+    arma::vec calculate_non_linear_weights(zimmer::WindowProcessor::WindowType win_type, arma::uword windowSize, double alpha=-1);
 
     arma::vec _ewm_correction(const arma::vec &results, const arma::vec &v0, zimmer::WindowProcessor::WindowType win_type);
 
