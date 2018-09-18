@@ -107,7 +107,8 @@ namespace zimmer {
         double default_value = NAN;
     };
 
-    arma::vec calculate_non_linear_weights(zimmer::WindowProcessor::WindowType win_type, arma::uword windowSize, double alpha=-1);
+    arma::vec calculate_window_weights(zimmer::WindowProcessor::WindowType win_type, arma::uword windowSize,
+                                       double alpha = -1);
 
     arma::vec _ewm_correction(const arma::vec &results, const arma::vec &v0, zimmer::WindowProcessor::WindowType win_type);
 

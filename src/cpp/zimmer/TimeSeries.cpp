@@ -231,7 +231,7 @@ TimeSeries TimeSeries::abs() const {
 }
 
 
-arma::vec zimmer::calculate_non_linear_weights(
+arma::vec zimmer::calculate_window_weights(
         zimmer::WindowProcessor::WindowType win_type,
         arma::uword windowSize,
         double alpha
@@ -350,7 +350,7 @@ TimeSeries::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &proces
         // Define weights vector required for specific windows
         arma::vec weights;
         weights.copy_size(values);
-        weights = zimmer::calculate_non_linear_weights(win_type, windowSize, alpha).subvec(weightLeftIdx, weightRightIdx);
+        weights = zimmer::calculate_window_weights(win_type, windowSize, alpha).subvec(weightLeftIdx, weightRightIdx);
 
         const TimeSeries subSeries = TimeSeries(t.subvec(leftIdx, rightIdx), values);
 
