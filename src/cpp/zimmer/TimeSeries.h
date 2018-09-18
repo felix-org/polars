@@ -162,6 +162,10 @@ public:
 
     TimeSeries abs() const;
 
+    TimeSeries fillna(double filling_value=0.) const;
+
+    TimeSeries dropna() const;
+
     TimeSeries clip(double lower_limit, double upper_limit) const;
 
     TimeSeries pow(double power) const;

@@ -111,6 +111,53 @@ namespace TimeSeriesTests {
                             << "Expect " << "empty timeseries pow() fixture result to be correct" << "";
     }
 
+    TEST(TimeSeries, fillna){
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries({1, 2, 3, 4, 5},{1,0, 3, 0, 5}),
+                TimeSeries({1, 2, 3, 4, 5}, {1, NAN, 3, NAN, 5}).fillna()
+        ) << "Expect " << "replace NANs with zeros";
+
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries({1, 2, 3, 4, 5},{1, 1, 3, 1, 5}),
+                TimeSeries({1, 2, 3, 4, 5}, {1, NAN, 3, NAN, 5}).fillna(1.)
+        ) << "Expect " << "replace NANs with ones";
+
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}),
+                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}).fillna()
+        ) << "Expect " << " remains the same as no NANs";
+
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries(),
+                TimeSeries().fillna()
+        ) << "Expect " << " empty array";
+
+    }
+
+    TEST(TimeSeries, dropna) {
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries({1, 3, 5}, {1, 3, 5}),
+                TimeSeries({1, 2, 3, 4, 5}, {1, NAN, 3, NAN, 5}).dropna()
+        ) << "Expect " << "drop NANs so timeseries only contains finite elements";
+
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}),
+                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}).dropna()
+        ) << "Expect " << " remains the same as no NANs";
+
+        EXPECT_PRED2(
+                TimeSeries::equal,
+                TimeSeries(),
+                TimeSeries().dropna()
+        ) << "Expect " << " empty array";
+    }
+
     TEST(TimeSeries, clipTest) {
         EXPECT_PRED2(
                 TimeSeries::equal,
