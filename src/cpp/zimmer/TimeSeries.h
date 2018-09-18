@@ -162,6 +162,8 @@ public:
 
     TimeSeries abs() const;
 
+    double quantile(double quantile) const;
+
     TimeSeries fillna(double filling_value=0.) const;
 
     TimeSeries dropna() const;

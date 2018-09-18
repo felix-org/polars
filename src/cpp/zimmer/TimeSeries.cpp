@@ -230,20 +230,20 @@ TimeSeries TimeSeries::abs() const {
     return TimeSeries(timestamps(), arma::abs(values()));
 }
 
+double TimeSeries::quantile(double quantile) const {
+    return zimmer::numc::quantile(values(), quantile);
+}
 
 TimeSeries TimeSeries::fillna(double filling_value) const {
-
     arma::vec vals = values();
     vals.transform( [=](double val) { return (std::isnan(val) ? filling_value : val); } );
     return TimeSeries(timestamps(), vals);
-
 }
 
 TimeSeries TimeSeries::dropna() const {
     // Get indices of finite elements
     arma::uvec indices = arma::find_finite(values());
     return TimeSeries(timestamps().elem( indices ), values().elem( indices ));
-
 }
 
 
