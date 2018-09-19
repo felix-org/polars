@@ -162,9 +162,9 @@ public:
 
     TimeSeries abs() const;
 
-    double quantile(double quantile) const;
+    double quantile(double q=0.5) const;
 
-    TimeSeries fillna(double filling_value=0.) const;
+    TimeSeries fillna(double value=0.) const;
 
     TimeSeries dropna() const;
 

@@ -156,6 +156,12 @@ namespace TimeSeriesTests {
                 TimeSeries(),
                 TimeSeries().dropna()
         ) << "Expect " << " empty array";
+
+        EXPECT_PRED2(
+            TimeSeries::equal,
+            TimeSeries({1, 2, 4}, {1, arma::datum::inf, 3}),
+            TimeSeries({1, 2, 3, 4}, {1, arma::datum::inf, NAN, 3}).dropna()
+        ) << "Expect " << " drops NA and preserves inf";
     }
 
     TEST(TimeSeries, clipTest) {
@@ -621,5 +627,17 @@ namespace TimeSeriesTests {
                 TimeSeries({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(4, zimmer::ExpMean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
                 TimeSeries({1, 2, 3, 4}, {1, 1.6666666666666667, 2.4285714285714284, 3.2666666666666666})
         ) << "Expect " << "with a window of 4";
+    }
+
+    TEST(TimeSeries, quantile){
+
+        EXPECT_TRUE(std::isnan(TimeSeries().quantile())) << "Expect" << " NAN for empty array";
+
+        EXPECT_EQ(TimeSeries({1}, {1}).quantile(1), 1) << "Expect" << " one";
+
+        EXPECT_EQ(TimeSeries({1, 2, 3}, {1, 2, 3}).quantile(), 2) << "Expect" << " median as default";
+
+        EXPECT_FLOAT_EQ(TimeSeries({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}).quantile(0.3), 2.7) << "Expect" << " 0.3 quantile";
+
     }
 } // namespace TimeSeriesTests
