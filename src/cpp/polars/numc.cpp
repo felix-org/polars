@@ -7,7 +7,7 @@
 #define EPSILON  (1.0E-150)
 #define VERYSMALL    (1.0E-8)
 
-namespace zimmer {
+namespace polars {
 
     namespace numc {
 
@@ -188,4 +188,4 @@ namespace zimmer {
         }
 
     } // namespace numc
-} // namespace zimmer
+} // namespace polars

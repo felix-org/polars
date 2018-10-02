@@ -14,7 +14,7 @@
 class Series;
 
 
-namespace zimmer {
+namespace polars {
 
     class WindowProcessor {
     public:
@@ -107,17 +107,17 @@ namespace zimmer {
         double default_value = NAN;
     };
 
-    arma::vec calculate_window_weights(zimmer::WindowProcessor::WindowType win_type, arma::uword windowSize,
+    arma::vec calculate_window_weights(polars::WindowProcessor::WindowType win_type, arma::uword windowSize,
                                        double alpha = -1);
 
-    arma::vec _ewm_correction(const arma::vec &results, const arma::vec &v0, zimmer::WindowProcessor::WindowType win_type);
+    arma::vec _ewm_correction(const arma::vec &results, const arma::vec &v0, polars::WindowProcessor::WindowType win_type);
 
-}  // zimmer
+}  // polars
 
 
 class Series {
 public:
-    using SeriesMask=zimmer::SeriesMask;
+    using SeriesMask=polars::SeriesMask;
     typedef arma::uword SeriesSize;
 
     Series();
@@ -126,9 +126,9 @@ public:
 
     static Series from_vect(std::vector<double> &t_v, std::vector<double> &v_v);
 
-    zimmer::SeriesMask operator==(const int rhs) const;
+    polars::SeriesMask operator==(const int rhs) const;
 
-    zimmer::SeriesMask operator!=(const int rhs) const;
+    polars::SeriesMask operator!=(const int rhs) const;
 
     Series operator+(const double &rhs) const;
 
@@ -136,17 +136,17 @@ public:
 
     Series operator*(const double &rhs) const;
 
-    zimmer::SeriesMask operator>(const double &rhs) const;
+    polars::SeriesMask operator>(const double &rhs) const;
 
-    zimmer::SeriesMask operator>=(const double &rhs) const;
+    polars::SeriesMask operator>=(const double &rhs) const;
 
-    zimmer::SeriesMask operator<=(const double &rhs) const;
+    polars::SeriesMask operator<=(const double &rhs) const;
 
-    zimmer::SeriesMask operator==(const Series &rhs) const;  // TODO test for floating point stability
+    polars::SeriesMask operator==(const Series &rhs) const;  // TODO test for floating point stability
 
-    zimmer::SeriesMask operator>(const Series &rhs) const;
+    polars::SeriesMask operator>(const Series &rhs) const;
 
-    zimmer::SeriesMask operator<(const Series &rhs) const;
+    polars::SeriesMask operator<(const Series &rhs) const;
 
     Series operator+(const Series &rhs) const;
 
@@ -183,11 +183,11 @@ public:
     Series pow(double power) const;
 
     Series rolling(SeriesSize windowSize,
-                       const zimmer::WindowProcessor &processor,
+                       const polars::WindowProcessor &processor,
                        SeriesSize minPeriods = 0, /* 0 treated as windowSize */
                        bool center = true,
                        bool symmetric = false,
-                       zimmer::WindowProcessor::WindowType win_type = zimmer::WindowProcessor::WindowType::none,
+                       polars::WindowProcessor::WindowType win_type = polars::WindowProcessor::WindowType::none,
                        double alpha = -1) const;
 
     Series apply(double (*f)(double)) const;
@@ -221,7 +221,7 @@ private:
     arma::vec v;
 };
 
-namespace zimmer { typedef Series Series; }  // Aid moving Series inside zimmer namespace
+namespace polars { typedef Series Series; }  // Aid moving Series inside polars namespace
 
 std::ostream &operator<<(std::ostream &os, const Series &ts);
 

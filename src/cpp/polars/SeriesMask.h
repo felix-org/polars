@@ -8,7 +8,7 @@
 #include "armadillo"
 
 class Series;
-namespace zimmer {
+namespace polars {
     // TODO combine Series and SeriesMask via a BaseSeries
     // TODO Create IntSeries and EnumSeries
     // TODO rename Series -> DoubleSeries and SeriesMask -> BoolSeries

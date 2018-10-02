@@ -12,7 +12,7 @@
 #include <vector>
 #include "armadillo"
 
-namespace zimmer {
+namespace polars {
 
     namespace numc {
 
@@ -37,4 +37,4 @@ namespace zimmer {
         double quantile(const arma::vec &x, double q);
 
     } // numc
-} // zimmer
+} // polars

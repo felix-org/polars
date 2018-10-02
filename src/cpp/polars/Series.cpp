@@ -3,14 +3,14 @@
 //
 
 /**
- * TimeSeries
+ * Series
  *
  * This module defines a Series class that is inspired by a python pandas Series class.
  *
  *
  * Style guide when extending Series
  * =====================================
- * Where possible, this class will behave the same as a pandas Series with a DataTimeIndex would. The supported features
+ * Where possible, this class will behave the same as a pandas Series. The supported features
  * of this class will be a subset of what is available by pandas.Series, and the typing system of C++ will be used to
  * full effect here where it makes sense.
  *
@@ -20,8 +20,8 @@
 #include "Series.h"
 #include "numc.h"
 
-typedef zimmer::SeriesMask SeriesMask;
-namespace zimmer {
+typedef polars::SeriesMask SeriesMask;
+namespace polars {
 
 
 // check if a double is an integer value, e.g. 2.0 vs 2.1
@@ -57,36 +57,36 @@ namespace zimmer {
     }
 
 
-    double zimmer::Sum::processWindow(const Series &window, const arma::vec weights) const {
-        return zimmer::numc::sum_finite((weights % window.values()));
+    double polars::Sum::processWindow(const Series &window, const arma::vec weights) const {
+        return polars::numc::sum_finite((weights % window.values()));
     }
 
 
-    zimmer::Count::Count(double default_value) : default_value(default_value) {}
+    polars::Count::Count(double default_value) : default_value(default_value) {}
 
 
-    double zimmer::Count::processWindow(const Series &window, const arma::vec weights) const {
+    double polars::Count::processWindow(const Series &window, const arma::vec weights) const {
         return window.finiteSize();
     }
 
 
-    zimmer::Mean::Mean(double default_value) : default_value(default_value) {}
+    polars::Mean::Mean(double default_value) : default_value(default_value) {}
 
 
-    double zimmer::Mean::processWindow(const Series &window, const arma::vec weights) const {
+    double polars::Mean::processWindow(const Series &window, const arma::vec weights) const {
         // This method doesn't support exponential window so results will be faulty. Please use ExpMean instead.
         arma::vec weighted_values = window.values() % weights;
-        return zimmer::numc::sum_finite(weighted_values) / arma::sum(weights);
+        return polars::numc::sum_finite(weighted_values) / arma::sum(weights);
     }
 
-    double zimmer::ExpMean::processWindow(const Series &window, const arma::vec weights) const {
+    double polars::ExpMean::processWindow(const Series &window, const arma::vec weights) const {
         // This ensures deals with NAs like pandas for the case ignore_na = False which is the default setting.
         arma::vec weights_for_sum = weights.elem(arma::find_finite(window.values()));
         arma::vec weighted_values = window.values() % weights;
-        return zimmer::numc::sum_finite(weighted_values) / arma::sum(weights_for_sum);
+        return polars::numc::sum_finite(weighted_values) / arma::sum(weights_for_sum);
     }
 
-} // zimmer
+} // polars
 
 Series::Series() = default;
 
@@ -137,25 +137,25 @@ SeriesMask Series::operator>(const Series &rhs) const {
 
 SeriesMask Series::operator<(const Series &rhs) const {
     //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
-    return zimmer::SeriesMask(values() < rhs.values(), index());
+    return polars::SeriesMask(values() < rhs.values(), index());
 }
 
 
 Series Series::operator+(const Series &rhs) const {
     //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
-    return zimmer::Series(values() + rhs.values(), index());
+    return polars::Series(values() + rhs.values(), index());
 }
 
 
 Series Series::operator-(const Series &rhs) const {
     //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
-    return zimmer::Series(values() - rhs.values(), index());
+    return polars::Series(values() - rhs.values(), index());
 }
 
 
 Series Series::operator*(const Series &rhs) const {
     //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
-    return zimmer::Series(values() % rhs.values(), index());
+    return polars::Series(values() % rhs.values(), index());
 }
 
 
@@ -191,7 +191,7 @@ Series Series::operator*(const double &rhs) const {
 bool Series::equals(const Series &rhs) const {
     if ((index().n_rows != rhs.index().n_rows)) return false;
     if ((index().n_cols != rhs.index().n_cols)) return false;
-    if (!zimmer::numc::equal_handling_nans(values(), rhs.values())) return false;
+    if (!polars::numc::equal_handling_nans(values(), rhs.values())) return false;
     if (any(index() != rhs.index())) return false;
     return true;
 }
@@ -201,7 +201,7 @@ bool Series::equals(const Series &rhs) const {
 bool Series::almost_equals(const Series &rhs) const {
     if ((index().n_rows != rhs.index().n_rows)) return false;
     if ((index().n_cols != rhs.index().n_cols)) return false;
-    if (!zimmer::numc::almost_equal_handling_nans(values(), rhs.values())) return false;
+    if (!polars::numc::almost_equal_handling_nans(values(), rhs.values())) return false;
     if (any(index() != rhs.index())) return false;
     return true;
 }
@@ -280,7 +280,7 @@ Series Series::abs() const {
 }
 
 double Series::quantile(double q) const {
-    return zimmer::numc::quantile(values(), q);
+    return polars::numc::quantile(values(), q);
 }
 
 Series Series::fillna(double value) const {
@@ -299,25 +299,25 @@ Series Series::dropna() const {
 }
 
 
-arma::vec zimmer::calculate_window_weights(
-        zimmer::WindowProcessor::WindowType win_type,
+arma::vec polars::calculate_window_weights(
+        polars::WindowProcessor::WindowType win_type,
         arma::uword windowSize,
         double alpha
 ) {
     switch(win_type){
-        case(zimmer::WindowProcessor::WindowType::none):
+        case(polars::WindowProcessor::WindowType::none):
             return arma::ones(windowSize);
-        case(zimmer::WindowProcessor::WindowType::triang):
-            return zimmer::numc::triang(windowSize);
-        case(zimmer::WindowProcessor::WindowType::expn):
-            return reverse(zimmer::numc::exponential(windowSize, -1. / log(1 - alpha), false, 0));
+        case(polars::WindowProcessor::WindowType::triang):
+            return polars::numc::triang(windowSize);
+        case(polars::WindowProcessor::WindowType::expn):
+            return reverse(polars::numc::exponential(windowSize, -1. / log(1 - alpha), false, 0));
         default:
             return arma::ones(windowSize);
     }
 }
 
 
-arma::vec zimmer::_ewm_correction(const arma::vec &results, const arma::vec &vals, zimmer::WindowProcessor::WindowType win_type) {
+arma::vec polars::_ewm_correction(const arma::vec &results, const arma::vec &vals, polars::WindowProcessor::WindowType win_type) {
     /* Method that shifts result from rolling average with exp window so it yields correct normalisation and allows usage
      * of rolling method hereby implemented.
      * This matches pandas ewm for its default case */
@@ -326,7 +326,7 @@ arma::vec zimmer::_ewm_correction(const arma::vec &results, const arma::vec &val
         return arma::vec({});
     }
 
-    if (win_type == zimmer::WindowProcessor::WindowType::expn) {
+    if (win_type == polars::WindowProcessor::WindowType::expn) {
         // Correction to match pandas ewm - shift by one.
         arma::vec results_ewm;
         results_ewm.copy_size(results);
@@ -346,8 +346,8 @@ arma::vec zimmer::_ewm_correction(const arma::vec &results, const arma::vec &val
 
 // todo; allow passing in transformation function rather than WindowProcessor.
 Series
-Series::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &processor, SeriesSize minPeriods,
-                    bool center, bool symmetric, zimmer::WindowProcessor::WindowType win_type, double alpha) const {
+Series::rolling(SeriesSize windowSize, const polars::WindowProcessor &processor, SeriesSize minPeriods,
+                    bool center, bool symmetric, polars::WindowProcessor::WindowType win_type, double alpha) const {
 
     //assert(center); // todo; implement center:false
     //assert(windowSize > 0);
@@ -418,7 +418,7 @@ Series::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &processor,
         // Define weights vector required for specific windows
         arma::vec weights;
         weights.copy_size(values);
-        weights = zimmer::calculate_window_weights(win_type, windowSize, alpha).subvec(weightLeftIdx, weightRightIdx);
+        weights = polars::calculate_window_weights(win_type, windowSize, alpha).subvec(weightLeftIdx, weightRightIdx);
 
         const Series subSeries = Series(values, t.subvec(leftIdx, rightIdx));
 
@@ -429,7 +429,7 @@ Series::rolling(SeriesSize windowSize, const zimmer::WindowProcessor &processor,
         }
     }
 
-    return Series(zimmer::_ewm_correction(resultv, v, win_type), t);
+    return Series(polars::_ewm_correction(resultv, v, win_type), t);
 
 }
 
@@ -528,5 +528,5 @@ std::map<double, double> Series::to_map() const {
  * @return the ostream for further piping
  */
 std::ostream &operator<<(std::ostream &os, const Series &ts) {
-    return os << "Series:\ntimestamps\n" << ts.index() << "values\n" << ts.values();
+    return os << "Series:\nindices\n" << ts.index() << "values\n" << ts.values();
 }

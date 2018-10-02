@@ -7,7 +7,7 @@
 #include "Series.h"
 #include "SeriesMask.h"
 
-namespace zimmer {
+namespace polars {
 
     SeriesMask::SeriesMask() = default;
 
@@ -80,7 +80,7 @@ namespace zimmer {
      * @return the ostream for further piping
      */
     std::ostream &operator<<(std::ostream &os, const SeriesMask &ts) {
-        return os << "SeriesMask:\ntimestamps\n" << ts.index() << "values\n" << ts.values();
+        return os << "SeriesMask:\nindices\n" << ts.index() << "values\n" << ts.values();
     }
 
 

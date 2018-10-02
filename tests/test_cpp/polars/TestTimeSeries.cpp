@@ -3,10 +3,10 @@
 //
 #include "gtest/gtest.h"
 
-#include "zimmer/TimeSeries.h"
-#include "zimmer/TimeSeriesMask.h"
-#include "zimmer/look_ahead.h"
-#include "zimmer/numc.h"
+#include "polars/TimeSeries.h"
+#include "polars/TimeSeriesMask.h"
+#include "polars/look_ahead.h"
+#include "polars/numc.h"
 
 
 namespace TimeSeriesTests {
@@ -32,7 +32,7 @@ namespace TimeSeriesTests {
     TEST(TimeSeries, not_equal) {
         EXPECT_PRED2(TimeSeries::not_equal, TimeSeries(arma::vec({1, 2}), arma::vec({3, 4})),
                      TimeSeries(arma::vec({1, 2}), arma::vec({1, 2})))
-                            << "Expect " << "timestamps match does not imply TimeSeries match";
+                            << "Expect " << "indices match does not imply TimeSeries match";
 
         EXPECT_PRED2(TimeSeries::not_equal, TimeSeries(arma::vec({1, 2}), arma::vec({3, 4})),
                      TimeSeries(arma::vec({3, 4}), arma::vec({3, 4})))
@@ -40,27 +40,27 @@ namespace TimeSeriesTests {
 
         EXPECT_PRED2(TimeSeries::not_equal, TimeSeries(arma::vec({1, 2}), arma::vec({3, 4})),
                      TimeSeries(arma::vec({3, 4}), arma::vec({1, 2})))
-                            << "Expect " << "swapping timestamps and values results in no match" << "";
+                            << "Expect " << "swapping indices and values results in no match" << "";
     }
 
     TEST(TimeSeries, where) {
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2}, {3, 4}).where(zimmer::TimeSeriesMask({1, 2}, {0, 1}), 17),
+                TimeSeries({1, 2}, {3, 4}).where(polars::TimeSeriesMask({1, 2}, {0, 1}), 17),
                 TimeSeries({1, 2}, {17, 4})
         ) << "Expect " << "simple where()  to select correctly";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2}, {3, 4}).where(zimmer::TimeSeriesMask({1, 2}, {0, 1}), NAN),
+                TimeSeries({1, 2}, {3, 4}).where(polars::TimeSeriesMask({1, 2}, {0, 1}), NAN),
                 TimeSeries({1, 2}, {NAN, 4})
         ) << "Expect " << ".where(..., NAN) to not set everything to NAN";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2}, {3, 4}).where(zimmer::TimeSeriesMask({1, 2}, {0, 1}),
-                                                 zimmer::LookAheadInterface::DetailedState::unknown),
-                TimeSeries({1, 2}, {zimmer::LookAheadInterface::DetailedState::unknown, 4})
+                TimeSeries({1, 2}, {3, 4}).where(polars::TimeSeriesMask({1, 2}, {0, 1}),
+                                                 polars::LookAheadInterface::DetailedState::unknown),
+                TimeSeries({1, 2}, {polars::LookAheadInterface::DetailedState::unknown, 4})
         ) << "Expect " << ".where(..., enum_value) and correctly pass the enum through";
     }
 
@@ -199,49 +199,49 @@ namespace TimeSeriesTests {
 
     TEST(TimeSeries, RollingQuantileTest) {
         EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({}), arma::vec({})),
-                     TimeSeries(arma::vec({}), arma::vec({})).rolling(3, zimmer::Quantile(0.5)))
+                     TimeSeries(arma::vec({}), arma::vec({})).rolling(3, polars::Quantile(0.5)))
                             << "Expect " << "rolling() test 1 for empty series" << "";
 
         EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({1, 2}), arma::vec({NAN, NAN})),
-                     TimeSeries(arma::vec({1, 2}), arma::vec({1, 1})).rolling(3, zimmer::Quantile(0.5)))
+                     TimeSeries(arma::vec({1, 2}), arma::vec({1, 1})).rolling(3, polars::Quantile(0.5)))
                             << "Expect " << "series of size 2, rolling window of 3, should be NANS" << "";
 
         EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({1, 2, 3}), arma::vec({NAN, 1, NAN})),
-                     TimeSeries(arma::vec({1, 2, 3}), arma::vec({1, 1, 1})).rolling(3, zimmer::Quantile(0.5)))
+                     TimeSeries(arma::vec({1, 2, 3}), arma::vec({1, 1, 1})).rolling(3, polars::Quantile(0.5)))
                             << "Expect " << "series of size 3, rolling window of 3" << "";
 
         EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({1, 2, 3}), arma::vec({NAN, 5, NAN})),
-                     TimeSeries(arma::vec({1, 2, 3}), arma::vec({10, 1, 5})).rolling(3, zimmer::Quantile(0.5)))
+                     TimeSeries(arma::vec({1, 2, 3}), arma::vec({10, 1, 5})).rolling(3, polars::Quantile(0.5)))
                             << "Expect " << "series of size 3, rolling window of 3" << "";
 
         EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({1, 2, 3, 4}), arma::vec({NAN, NAN, 5.5, NAN})),
-                     TimeSeries(arma::vec({1, 2, 3, 4}), arma::vec({10, 1, 5, 6})).rolling(4, zimmer::Quantile(0.5)))
+                     TimeSeries(arma::vec({1, 2, 3, 4}), arma::vec({10, 1, 5, 6})).rolling(4, polars::Quantile(0.5)))
                             << "Expect " << "series of size 4, rolling window of 4" << "";
 
         EXPECT_PRED2(TimeSeries::almost_equal, TimeSeries(arma::vec({1, 2, 3, 4, 5}), arma::vec({NAN, NAN, 3.4, NAN, NAN})),
-                     TimeSeries(arma::vec({1, 2, 3, 4, 5}), arma::vec({10, 1, 5, 4, 7})).rolling(5, zimmer::Quantile(0.2)))
+                     TimeSeries(arma::vec({1, 2, 3, 4, 5}), arma::vec({10, 1, 5, 4, 7})).rolling(5, polars::Quantile(0.2)))
                             << "Expect " << "series of size 5, rolling window of 5, quantile 0.2" << "";
 
         EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({1, 2, 3, 4, 5}), arma::vec({NAN, 5.5, NAN, NAN, 5.5})),
-                     TimeSeries(arma::vec({1, 2, 3, 4, 5}), arma::vec({10, 1, NAN, 4, 7})).rolling(2, zimmer::Quantile(0.5)))
+                     TimeSeries(arma::vec({1, 2, 3, 4, 5}), arma::vec({10, 1, NAN, 4, 7})).rolling(2, polars::Quantile(0.5)))
                             << "Expect " << "NAN test case passes" << "";
 
 
         EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({1, 2, 3}), arma::vec({5.5, 5, 3})),
-                     TimeSeries(arma::vec({1, 2, 3}), arma::vec({10, 1, 5})).rolling(3, zimmer::Quantile(0.5), 2, true))
+                     TimeSeries(arma::vec({1, 2, 3}), arma::vec({10, 1, 5})).rolling(3, polars::Quantile(0.5), 2, true))
                             << "Expect " << "rolling() test 1 for minperiods" << "";
 
         EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({1, 2, 3}), arma::vec({NAN, 7.5, NAN})),
-                     TimeSeries(arma::vec({1, 2, 3}), arma::vec({10, NAN, 5})).rolling(3, zimmer::Quantile(0.5), 2, true))
+                     TimeSeries(arma::vec({1, 2, 3}), arma::vec({10, NAN, 5})).rolling(3, polars::Quantile(0.5), 2, true))
                             << "Expect " << "rolling() test 2 for minperiods, with nans" << "";
 
         EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({1, 2, 3}), arma::vec({1, 1, 1})),
-                     TimeSeries(arma::vec({1, 2, 3}), arma::vec({1, NAN, 1})).rolling(3, zimmer::Quantile(0.5), 1, true))
+                     TimeSeries(arma::vec({1, 2, 3}), arma::vec({1, NAN, 1})).rolling(3, polars::Quantile(0.5), 1, true))
                             << "Expect " << "series of size 3, rolling window of 3" << "";
 
         EXPECT_PRED2(TimeSeries::equal, TimeSeries(arma::vec({1, 2, 3}), arma::vec({1, 0.5, 1})),
                      TimeSeries(arma::vec({1, 2, 3}), arma::vec({1, NAN, 1})).rolling(
-                             3, zimmer::Quantile(0.5), 1, true, false, zimmer::WindowProcessor::WindowType::triang))
+                             3, polars::Quantile(0.5), 1, true, false, polars::WindowProcessor::WindowType::triang))
                             << "Expect " << "series of size 3, rolling window of 3 with triang weights (0.5,1,0.5)" << "";
     }
 
@@ -249,25 +249,25 @@ namespace TimeSeriesTests {
     TEST(TimeSeries, rolling_sum) {
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries().rolling(5, zimmer::Sum()),
+                TimeSeries().rolling(5, polars::Sum()),
                 TimeSeries()
         ) << "Expect " << "empty TimeSeries returns empty TimeSeries";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(1, zimmer::Sum()),
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(1, polars::Sum()),
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN})
         ) << "Expect " << "with a window of 1 the timeseries is returned as is";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Sum()),
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, polars::Sum()),
                 TimeSeries({1, 2, 3, 4, 5}, {NAN,  6.5, 4.5, NAN, NAN})
         ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should be the sum, not NAN";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Sum(), 2),
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, polars::Sum(), 2),
                 TimeSeries({1, 2, 3, 4, 5}, {3,  6.5, 4.5, 2.5, NAN})
         ) << "Expect " << "with window=3, min_periods=2 the edge values should be NAN and the rest should sum the windows";
     }
@@ -276,57 +276,57 @@ namespace TimeSeriesTests {
     TEST(TimeSeries, rolling_count) {
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries().rolling(5, zimmer::Count()),
+                TimeSeries().rolling(5, polars::Count()),
                 TimeSeries()
         ) << "Expect " << "empty TimeSeries returns empty TimeSeries";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3.5, -1, NAN}).rolling(1, zimmer::Count()),
+                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3.5, -1, NAN}).rolling(1, polars::Count()),
                 TimeSeries({1, 2, 3, 4, 5}, {1, 1, 1, 1, NAN})
         ) << "Expect " << "with a window of 1 the timeseries is returned as is";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3.5, -1, NAN}).rolling(3, zimmer::Count()),
+                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3.5, -1, NAN}).rolling(3, polars::Count()),
                 TimeSeries({1, 2, 3, 4, 5}, {NAN, 3, 3, NAN, NAN})
         ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should be the count, not NAN";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3.5, -1, NAN}).rolling(3, zimmer::Count(), 2),
+                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3.5, -1, NAN}).rolling(3, polars::Count(), 2),
                 TimeSeries({1, 2, 3, 4, 5}, {2, 3, 3, 2, NAN})
         ) << "Expect " << "with window=3, min_periods=2 then any windows with at least 2 values should be non-NAN";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3.5, -1, NAN}).rolling(3, zimmer::Count(), 1),
+                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3.5, -1, NAN}).rolling(3, polars::Count(), 1),
                 TimeSeries({1, 2, 3, 4, 5}, {2, 3, 3, 2, 1})
         ) << "Expect " << "with window=3, min_periods=1 the edge values should be NAN and the rest should count the windows";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3.5, NAN, NAN}).rolling(3, zimmer::Count(0), 1),
+                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3.5, NAN, NAN}).rolling(3, polars::Count(0), 1),
                 TimeSeries({1, 2, 3, 4, 5}, {2, 3, 2, 1, 0})
         ) << "Expect " << "with window=3, min_periods=1 and a default of 0, all windows should have a count";
 
         // Symmetric = True - Odd array with odd window works (e.g. array of 5 with window of 3)
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}).rolling(3, zimmer::Count(), 1, true, true),
+                TimeSeries({1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}).rolling(3, polars::Count(), 1, true, true),
                 TimeSeries({1, 2, 3, 4, 5}, {1, 3, 3, 3, 1})
         ) << "Expect " << "with window of 3 the timeseries expects smaller windows on the edges so counts are 1";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(7, zimmer::Count(), 1, true, true),
+                TimeSeries({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(7, polars::Count(), 1, true, true),
                 TimeSeries({1, 2, 3, 4, 5, 6}, {1, 3, 5, 5, 3, 1})
         ) << "Expect " << "with window of 7 the timeseries expects smaller and smaller counts along the edges";
 
         // Even array with odd window
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(3, zimmer::Count(), 1, true, true),
+                TimeSeries({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(3, polars::Count(), 1, true, true),
                 TimeSeries({1, 2, 3, 4, 5, 6}, {1, 3, 3, 3, 3, 1})
         ) << "Expect " << "with an even array, weighting still works out.";
     }
@@ -342,13 +342,13 @@ namespace TimeSeriesTests {
                 TimeSeries::equal,
                 TimeSeries({1, 2}, {3, 4}) + 1,
                 TimeSeries({1, 2}, {4, 5})
-        ) << "Expect " << "adding 1 increases the values, not the timestamps";
+        ) << "Expect " << "adding 1 increases the values, not the indices";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
                 TimeSeries({1, 2, 3}, {3, 4, arma::datum::nan}) + 1,
                 TimeSeries({1, 2, 3}, {4, 5, arma::datum::nan})
-        ) << "Expect " << "adding 1 increases the values, not the timestamps, and ignores nan";
+        ) << "Expect " << "adding 1 increases the values, not the indices, and ignores nan";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
@@ -370,13 +370,13 @@ namespace TimeSeriesTests {
                 TimeSeries::equal,
                 TimeSeries({1, 2}, {3, 4}) - 1,
                 TimeSeries({1, 2}, {2, 3})
-        ) << "Expect " << "adding 1 increases the values, not the timestamps";
+        ) << "Expect " << "adding 1 increases the values, not the indices";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
                 TimeSeries({1, 2, 3}, {3, 4, arma::datum::nan}) - 1,
                 TimeSeries({1, 2, 3}, {2, 3, arma::datum::nan})
-        ) << "Expect " << "adding 1 increases the values, not the timestamps, and ignores nan";
+        ) << "Expect " << "adding 1 increases the values, not the indices, and ignores nan";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
@@ -398,13 +398,13 @@ namespace TimeSeriesTests {
                 TimeSeries::equal,
                 TimeSeries({1, 2}, {3, 4}) * 2,
                 TimeSeries({1, 2}, {6, 8})
-        ) << "Expect " << "multiplying by 2 changes the values, not the timestamps";
+        ) << "Expect " << "multiplying by 2 changes the values, not the indices";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
                 TimeSeries({1, 2, 3}, {3, 4, arma::datum::nan}) * 2,
                 TimeSeries({1, 2, 3}, {6, 8, arma::datum::nan})
-        ) << "Expect " << "multiplying by 2 changes the values, not the timestamps, and ignores nan";
+        ) << "Expect " << "multiplying by 2 changes the values, not the indices, and ignores nan";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
@@ -417,87 +417,87 @@ namespace TimeSeriesTests {
 
     TEST(TimeSeries, operator__eq) {
         EXPECT_PRED2(
-                zimmer::TimeSeriesMask::equal,
+                polars::TimeSeriesMask::equal,
                 TimeSeries() == TimeSeries(),
-                zimmer::TimeSeriesMask()
+                polars::TimeSeriesMask()
         ) << "Expect " << "empty TimeSeries stays empty";
 
         EXPECT_PRED2(
-                zimmer::TimeSeriesMask::equal,
+                polars::TimeSeriesMask::equal,
                 TimeSeries({1, 2, 3, 4}, {0, 1, 2, NAN}) ==
                 TimeSeries({1, 2, 3, 4}, {0, 1, 3, NAN}),
-                zimmer::TimeSeriesMask({1, 2, 3, 4}, {1, 1, 0, 0})
+                polars::TimeSeriesMask({1, 2, 3, 4}, {1, 1, 0, 0})
         ) << "Expect " << "matching should match, but NAN != NAN for the elementwise operator";
 
         EXPECT_PRED2(
-                zimmer::TimeSeriesMask::equal,
+                polars::TimeSeriesMask::equal,
                 TimeSeries() == 1,
-                zimmer::TimeSeriesMask()
+                polars::TimeSeriesMask()
         ) << "Expect " << "empty TimeSeries stays empty";
 
         EXPECT_PRED2(
-                zimmer::TimeSeriesMask::equal,
+                polars::TimeSeriesMask::equal,
                 TimeSeries({1, 2, 3, 4, 5}, {0, 1.99, 2, 1 + 1, NAN}) == 2,
-                zimmer::TimeSeriesMask({1, 2, 3, 4, 5}, {0, 0, 1, 1, 0})
+                polars::TimeSeriesMask({1, 2, 3, 4, 5}, {0, 0, 1, 1, 0})
         ) << "Expect " << "matching should match, but NAN != NAN for the elementwise operator";
     }
 
 
     TEST(TimeSeries, operator__ne) {
         EXPECT_PRED2(
-                zimmer::TimeSeriesMask::equal,
+                polars::TimeSeriesMask::equal,
                 TimeSeries() != 1,
-                zimmer::TimeSeriesMask()
+                polars::TimeSeriesMask()
         ) << "Expect " << "empty TimeSeries stays empty";
 
         EXPECT_PRED2(
-                zimmer::TimeSeriesMask::equal,
+                polars::TimeSeriesMask::equal,
                 TimeSeries({1, 2, 3, 4, 5}, {0, 1.99, 2, 1 + 1, NAN}) != 2,
-                zimmer::TimeSeriesMask({1, 2, 3, 4, 5}, {1, 1, 0, 0, 0})
+                polars::TimeSeriesMask({1, 2, 3, 4, 5}, {1, 1, 0, 0, 0})
         ) << "Expect " << "matching should match, but NAN != NAN for the elementwise operator";
     }
 
     TEST(TimeSeries, operator__gt) {
         EXPECT_PRED2(
-                zimmer::TimeSeriesMask::equal,
+                polars::TimeSeriesMask::equal,
                 TimeSeries() > TimeSeries(),
-                zimmer::TimeSeriesMask()
+                polars::TimeSeriesMask()
         ) << "Expect " << "empty TimeSeries stays empty";
 
 
         EXPECT_PRED2(
-                zimmer::TimeSeriesMask::equal,
+                polars::TimeSeriesMask::equal,
                 TimeSeries({1, 2, 3, 4}, {0, -1, 3, NAN}) >
                 TimeSeries({1, 2, 3, 4}, {0, -2, 2, NAN}),
-                zimmer::TimeSeriesMask({1, 2, 3, 4}, {0, 1, 1, 0})
+                polars::TimeSeriesMask({1, 2, 3, 4}, {0, 1, 1, 0})
         ) << "Expect " << "> should work as per pair, including NAN != NAN";
 
         EXPECT_PRED2(
-                zimmer::TimeSeriesMask::equal,
+                polars::TimeSeriesMask::equal,
                 TimeSeries({1, 2, 3, 4}, {0, -1, 3, NAN}) >= 0,
-                zimmer::TimeSeriesMask({1, 2, 3, 4}, {1, 0, 1, 0})
+                polars::TimeSeriesMask({1, 2, 3, 4}, {1, 0, 1, 0})
         ) << "Expect " << ">= should work per item, including NAN != NAN";
     }
 
     TEST(TimeSeries, operator__lt) {
         EXPECT_PRED2(
-                zimmer::TimeSeriesMask::equal,
+                polars::TimeSeriesMask::equal,
                 TimeSeries() < TimeSeries(),
-                zimmer::TimeSeriesMask()
+                polars::TimeSeriesMask()
         ) << "Expect " << "empty TimeSeries stays empty";
 
 
         EXPECT_PRED2(
-                zimmer::TimeSeriesMask::equal,
+                polars::TimeSeriesMask::equal,
                 TimeSeries({1, 2, 3, 4}, {0, -2, 2, NAN}) <
                 TimeSeries({1, 2, 3, 4}, {0, -1, 3, NAN}),
-                zimmer::TimeSeriesMask({1, 2, 3, 4}, {0, 1, 1, 0})
+                polars::TimeSeriesMask({1, 2, 3, 4}, {0, 1, 1, 0})
         ) << "Expect " << "> should work as per pair, including NAN != NAN";
 
         EXPECT_PRED2(
-                zimmer::TimeSeriesMask::equal,
+                polars::TimeSeriesMask::equal,
                 TimeSeries({1, 2, 3, 4}, {0, -1, 3, NAN}) <= 0,
-                zimmer::TimeSeriesMask({1, 2, 3, 4}, {1, 1, 0, 0})
+                polars::TimeSeriesMask({1, 2, 3, 4}, {1, 1, 0, 0})
         ) << "Expect " << "<= should work per item, including NAN != NAN";
     }
 
@@ -532,31 +532,31 @@ namespace TimeSeriesTests {
     TEST(TimeSeries, rolling_sum_triangle) {
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries().rolling(5, zimmer::Sum(),  0, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries().rolling(5, polars::Sum(),  0, true, false, polars::WindowProcessor::WindowType::triang),
                 TimeSeries()
         ) << "Expect " << "empty TimeSeries returns empty TimeSeries";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(1, zimmer::Sum(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(1, polars::Sum(), 0, true, false, polars::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN})
         ) << "Expect " << "with a window of 1 the timeseries is returned as is";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3}, {1, 2, 3}).rolling(2, zimmer::Sum(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries({1, 2, 3}, {1, 2, 3}).rolling(2, polars::Sum(), 0, true, false, polars::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3}, {NAN, 1.5, 2.5})
         ) << "Expect " << "with a window of 2";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Sum(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, polars::Sum(), 0, true, false, polars::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {NAN,  4.25, 4.0, NAN, NAN})
         ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should be the sum, not NAN";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Sum(), 2, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, polars::Sum(), 2, true, false, polars::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {2, 4.25, 4.0, 0.75, NAN})
         ) << "Expect " << "with window=3, min_periods=2 the edge values should be NAN and the rest should sum the windows";
     }
@@ -564,31 +564,31 @@ namespace TimeSeriesTests {
     TEST(TimeSeries, rolling_mean_triangle) {
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries().rolling(5, zimmer::Mean(),  0, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries().rolling(5, polars::Mean(),  0, true, false, polars::WindowProcessor::WindowType::triang),
                 TimeSeries()
         ) << "Expect " << "empty TimeSeries returns empty TimeSeries";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(1, zimmer::Mean(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(1, polars::Mean(), 0, true, false, polars::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN})
         ) << "Expect " << "with a window of 1 the timeseries is returned as is";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3}, {1, 2, 3}).rolling(3, zimmer::Mean(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries({1, 2, 3}, {1, 2, 3}).rolling(3, polars::Mean(), 0, true, false, polars::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3}, {NAN, 2, NAN})
         ) << "Expect " << "with a window of 3 the timeseries of length 3 returns just central value";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, zimmer::Mean(), 0, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries({1, 2, 3, 4, 5}, {1,  2, 3.5, -1, NAN}).rolling(3, polars::Mean(), 0, true, false, polars::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4, 5}, {NAN,  2.125, 2.0, NAN, NAN})
         ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should give weighted mean, not NAN";
 
         EXPECT_PRED2(
                 TimeSeries::almost_equal,
-                TimeSeries({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(5, zimmer::Mean(), 1, true, false, zimmer::WindowProcessor::WindowType::triang),
+                TimeSeries({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(5, polars::Mean(), 1, true, false, polars::WindowProcessor::WindowType::triang),
                 TimeSeries({1, 2, 3, 4}, {1.66666667, 2.25, 2.75, 3.33333333})
         ) << "Expect " << "no NANs because min periods is 1.";
     }
@@ -597,34 +597,34 @@ namespace TimeSeriesTests {
 
         EXPECT_PRED2(
                 TimeSeries::almost_equal,
-                TimeSeries({1, 2, 3, 4}, {0.1, 0.2, 0.3, 0.4}).rolling(4, zimmer::ExpMean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
+                TimeSeries({1, 2, 3, 4}, {0.1, 0.2, 0.3, 0.4}).rolling(4, polars::ExpMean(), 1, true, false, polars::WindowProcessor::WindowType::expn, 0.5),
                 TimeSeries({1, 2, 3, 4}, {0.1, 0.16666666666666667, 0.24285714285714284, 0.32666666666666666})
         ) << "Expect " << " first value to be the same as original series.";
 
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries().rolling(4, zimmer::ExpMean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
+                TimeSeries().rolling(4, polars::ExpMean(), 1, true, false, polars::WindowProcessor::WindowType::expn, 0.5),
                 TimeSeries()
         ) << "Expect " << " empty array back.";
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3}, {1, NAN, 3}).rolling(3, zimmer::ExpMean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
+                TimeSeries({1, 2, 3}, {1, NAN, 3}).rolling(3, polars::ExpMean(), 1, true, false, polars::WindowProcessor::WindowType::expn, 0.5),
                 TimeSeries({1, 2, 3}, {1., 1., 2.6})
         ) << "Expect " << " ignore NANs when computing weights.";
 
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4}, {1, NAN, NAN, 4}).rolling(4, zimmer::ExpMean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
+                TimeSeries({1, 2, 3, 4}, {1, NAN, NAN, 4}).rolling(4, polars::ExpMean(), 1, true, false, polars::WindowProcessor::WindowType::expn, 0.5),
                 TimeSeries({1, 2, 3, 4}, {1, 1, 1, 3.6666666666666665})
         ) << "Expect " << "with two NANs. This differs from Pandas as it ignores NAN's when computing the weights.";
 
 
         EXPECT_PRED2(
                 TimeSeries::equal,
-                TimeSeries({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(4, zimmer::ExpMean(), 1, true, false, zimmer::WindowProcessor::WindowType::expn, 0.5),
+                TimeSeries({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(4, polars::ExpMean(), 1, true, false, polars::WindowProcessor::WindowType::expn, 0.5),
                 TimeSeries({1, 2, 3, 4}, {1, 1.6666666666666667, 2.4285714285714284, 3.2666666666666666})
         ) << "Expect " << "with a window of 4";
     }
