@@ -474,7 +474,7 @@ Series::SeriesSize Series::finiteSize() const {
 
 
 // done this way so default copy / assignment works.
-// todo; make copies of timeseries share memory as they are const?
+// todo; make copies of indices share memory as they are const?
 const arma::vec Series::index() const {
     return t;
 }

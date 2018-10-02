@@ -6,8 +6,8 @@ add_executable(
         cpp_test
         ${TEST_CPP_SOURCE_DIR}/Expect.h
         ${TEST_CPP_SOURCE_DIR}/test_numc.cpp
-        ${TEST_CPP_SOURCE_DIR}/TestTimeSeries.cpp
-        ${TEST_CPP_SOURCE_DIR}/TestTimeSeriesMask.cpp
+        ${TEST_CPP_SOURCE_DIR}/TestSeries.cpp
+        ${TEST_CPP_SOURCE_DIR}/TestSeriesMask.cpp
 )
 
 target_link_libraries(cpp_test polars_cpp gtest_main)
