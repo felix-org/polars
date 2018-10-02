@@ -5,7 +5,6 @@
 
 #include "polars/Series.h"
 #include "polars/SeriesMask.h"
-#include "polars/look_ahead.h"
 #include "polars/numc.h"
 
 
@@ -55,13 +54,6 @@ namespace SeriesTests {
                 Series({3, 4}, {1, 2}).where(polars::SeriesMask({0, 1}, {1, 2}), NAN),
                 Series({NAN, 4}, {1, 2})
         ) << "Expect " << ".where(..., NAN) to not set everything to NAN";
-
-        EXPECT_PRED2(
-                Series::equal,
-                Series({3, 4}, {1, 2}).where(polars::SeriesMask({0, 1}, {1, 2}),
-                                                 polars::LookAheadInterface::DetailedState::unknown),
-                Series({polars::LookAheadInterface::DetailedState::unknown, 4}, {1, 2})
-        ) << "Expect " << ".where(..., enum_value) and correctly pass the enum through";
     }
 
     TEST(Series, DiffTest) {
