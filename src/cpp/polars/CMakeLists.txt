@@ -10,10 +10,10 @@ set(
         CPP_SOURCES
         "${CPP_SOURCE_DIR}/numc.h"
         "${CPP_SOURCE_DIR}/numc.cpp"
-        "${CPP_SOURCE_DIR}/TimeSeries.cpp"
-        "${CPP_SOURCE_DIR}/TimeSeries.h"
-        "${CPP_SOURCE_DIR}/TimeSeriesMask.cpp"
-        "${CPP_SOURCE_DIR}/TimeSeriesMask.h"
+        "${CPP_SOURCE_DIR}/Series.cpp"
+        "${CPP_SOURCE_DIR}/Series.h"
+        "${CPP_SOURCE_DIR}/SeriesMask.cpp"
+        "${CPP_SOURCE_DIR}/SeriesMask.h"
 )
 
 add_library(polars_cpp ${CPP_SOURCES})
