@@ -371,6 +371,22 @@ namespace polars {
 
     }
 
+    Window Series::rolling(SeriesSize windowSize,
+                   SeriesSize minPeriods,
+                   bool center,
+                   bool symmetric,
+                   polars::WindowProcessor::WindowType win_type,
+                   double alpha) const {
+        return Window((*this), windowSize, minPeriods, center, symmetric, win_type, alpha);
+    };
+
+    Rolling Series::rolling(SeriesSize windowSize,
+                    SeriesSize minPeriods,
+                    bool center,
+                    bool symmetric) const {
+        return Rolling((*this), windowSize, minPeriods, center, symmetric);
+    };
+
 
     Series Series::clip(double lower_limit, double upper_limit) const {
         SeriesMask upper = SeriesMask(values() < upper_limit, index());

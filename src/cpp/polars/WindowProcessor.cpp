@@ -71,4 +71,20 @@ namespace polars {
         return polars::numc::sum_finite(weighted_values) / arma::sum(weights_for_sum);
     }
 
+    Series Rolling::mean() {
+        return ts_.rolling(windowSize_, Mean(), minPeriods_, center_, symmetric_);
+    }
+
+    Series Rolling::quantile(int q) {
+        return ts_.rolling(windowSize_, Quantile(q), minPeriods_, center_, symmetric_);
+    }
+
+    Series Window::mean() {
+        return ts_.rolling(windowSize_, Mean(), minPeriods_, center_, symmetric_, win_type_, alpha_);
+    }
+
+    Series Window::quantile(int q) {
+        return ts_.rolling(windowSize_, Quantile(q), minPeriods_, center_, symmetric_, win_type_, alpha_);
+    }
+
 } // polars

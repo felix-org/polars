@@ -103,6 +103,66 @@ namespace polars {
 
     arma::vec _ewm_correction(const arma::vec &results, const arma::vec &v0, polars::WindowProcessor::WindowType win_type);
 
+    class Rolling {
+    public:
+        Rolling(
+                const Series& ts,
+                arma::uword windowSize,
+                arma::uword minPeriods = 0, /* 0 treated as windowSize */
+                bool center = true,
+                bool symmetric = false)
+                :
+                ts_(ts),
+                windowSize_(windowSize),
+                minPeriods_(minPeriods),
+                center_(center),
+                symmetric_(symmetric)
+        {};
+
+        Series mean();
+        Series quantile(int q);
+    private:
+        const Series& ts_;
+        arma::uword windowSize_;
+        arma::uword minPeriods_;
+        bool center_;
+        bool symmetric_;
+    };
+
+
+    class Window {
+    public:
+        Window(
+                const Series &ts,
+                arma::uword windowSize,
+                arma::uword minPeriods = 0, /* 0 treated as windowSize */
+                bool center = true,
+                bool symmetric = false,
+                polars::WindowProcessor::WindowType win_type = polars::WindowProcessor::WindowType::none,
+                double alpha = -1)
+                :
+                ts_(ts),
+                windowSize_(windowSize),
+                minPeriods_(minPeriods),
+                center_(center),
+                symmetric_(symmetric),
+                win_type_(win_type),
+                alpha_(alpha) {};
+
+        Series mean();
+
+        Series quantile(int q);
+
+    private:
+        const Series &ts_;
+        arma::uword windowSize_;
+        arma::uword minPeriods_;
+        bool center_;
+        bool symmetric_;
+        polars::WindowProcessor::WindowType win_type_;
+        double alpha_;
+    };
+
 }  // polars
 
 

@@ -193,6 +193,12 @@ namespace WindowProcessorTests {
 
         EXPECT_PRED2(
                 Series::equal,
+                Series({1, 2, 3.5, -1, NAN}, {1, 2, 3, 4, 5}).rolling(1, 0, true, false, polars::WindowProcessor::WindowType::triang).mean(),
+                Series({1, 2, 3.5, -1, NAN}, {1, 2, 3, 4, 5})
+        ) << "Expect " << "with a window of 1 the indices is returned as is";
+
+        EXPECT_PRED2(
+                Series::equal,
                 Series({1, 2, 3}, {1, 2, 3}).rolling(3, polars::Mean(), 0, true, false, polars::WindowProcessor::WindowType::triang),
                 Series({NAN, 2, NAN}, {1, 2, 3})
         ) << "Expect " << "with a window of 3 the indices of length 3 returns just central value";
@@ -204,8 +210,20 @@ namespace WindowProcessorTests {
         ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should give weighted mean, not NAN";
 
         EXPECT_PRED2(
+                Series::equal,
+                Series({1, 2, 3.5, -1, NAN}, {1, 2, 3, 4, 5}).rolling(3, 0, true, false, polars::WindowProcessor::WindowType::triang).mean(),
+                Series({NAN, 2.125, 2.0, NAN, NAN}, {1, 2, 3, 4, 5})
+        ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should give weighted mean, not NAN";
+
+        EXPECT_PRED2(
                 Series::almost_equal,
                 Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(5, polars::Mean(), 1, true, false, polars::WindowProcessor::WindowType::triang),
+                Series({1.66666667, 2.25, 2.75, 3.33333333}, {1, 2, 3, 4})
+        ) << "Expect " << "no NANs because min periods is 1.";
+
+        EXPECT_PRED2(
+                Series::almost_equal,
+                Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(5, 1, true, false, polars::WindowProcessor::WindowType::triang).mean(),
                 Series({1.66666667, 2.25, 2.75, 3.33333333}, {1, 2, 3, 4})
         ) << "Expect " << "no NANs because min periods is 1.";
     }
@@ -218,6 +236,11 @@ namespace WindowProcessorTests {
                 Series({0.1, 0.16666666666666667, 0.24285714285714284, 0.32666666666666666}, {1, 2, 3, 4})
         ) << "Expect " << " first value to be the same as original series.";
 
+        EXPECT_PRED2(
+                Series::almost_equal,
+                Series({0.1, 0.2, 0.3, 0.4}, {1, 2, 3, 4}).rolling(4, polars::ExpMean(), 1, true, false, polars::WindowProcessor::WindowType::expn, 0.5),
+                Series({0.1, 0.16666666666666667, 0.24285714285714284, 0.32666666666666666}, {1, 2, 3, 4})
+        ) << "Expect " << " first value to be the same as original series.";
 
         EXPECT_PRED2(
                 Series::equal,

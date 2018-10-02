@@ -90,6 +90,18 @@ namespace polars {
                        WindowProcessor::WindowType win_type = WindowProcessor::WindowType::none,
                        double alpha = -1) const;
 
+        Window rolling(SeriesSize windowSize,
+                       SeriesSize minPeriods = 0, /* 0 treated as windowSize */
+                       bool center = true,
+                       bool symmetric = false,
+                       polars::WindowProcessor::WindowType win_type = polars::WindowProcessor::WindowType::none,
+                       double alpha = -1) const;
+
+        Rolling rolling(SeriesSize windowSize,
+                        SeriesSize minPeriods = 0, /* 0 treated as windowSize */
+                        bool center = true,
+                        bool symmetric = false) const;
+
         Series apply(double (*f)(double)) const;
 
         double mean() const;
