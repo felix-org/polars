@@ -29,6 +29,11 @@ The file that changed is actually built by cmake so the changes can be readily i
 
 To install - WIP (need to add the install() command to the CMakeLists.txt)
 
+## What is polars?
+
+Polars was built to make cross platform mobile deployment easy - prototype in python, port quickly into C++, wrap into a library and deploy into ios and android.
+
+Being strongly and staticly typed it catches many bugs at compile time.
 
 In general:
 * CMake installation (WIP)
