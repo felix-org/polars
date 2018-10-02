@@ -9,220 +9,120 @@
 #include <vector>
 #include <cmath>
 #include "armadillo"
-
-
-class Series;
+#include "WindowProcessor.h"
 
 
 namespace polars {
-
-    class WindowProcessor {
-    public:
-
-        enum class WindowType {
-            none,
-            triang,
-            expn
-        };
-
-        virtual double processWindow(const Series &window, const arma::vec weights) const = 0;
-
-        virtual double defaultValue() const = 0;
-
-
-    };
-
-
-    class Quantile : public WindowProcessor {
-    public:
-        Quantile(double quantile);
-
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
-
-        inline double defaultValue() const {
-            return NAN;
-        }
-
-    private:
-        double quantile;
-    };
-
-
     class SeriesMask;
 
-    class Sum : public WindowProcessor {
+
+    class Series {
     public:
-        Sum() = default;
+        typedef arma::uword SeriesSize;
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        Series();
 
-        inline double defaultValue() const {
-            return NAN;
-        }
-    };
+        Series(const arma::vec &v, const arma::vec &t);
 
-    class Count : public WindowProcessor {
-    public:
-        Count() = default;
+        static Series from_vect(std::vector<double> &t_v, std::vector<double> &v_v);
 
-        Count(double default_value);
+        polars::SeriesMask operator==(const int rhs) const;
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        polars::SeriesMask operator!=(const int rhs) const;
 
-        inline double defaultValue() const {
-            return default_value;
-        }
+        Series operator+(const double &rhs) const;
 
-    private:
-        double default_value = NAN;
-    };
+        Series operator-(const double &rhs) const;
 
-    class Mean : public WindowProcessor {
-    public:
-        Mean() = default;
+        Series operator*(const double &rhs) const;
 
-        Mean(double default_value);
+        polars::SeriesMask operator>(const double &rhs) const;
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        polars::SeriesMask operator>=(const double &rhs) const;
 
-        inline double defaultValue() const {
-            return default_value;
-        }
+        polars::SeriesMask operator<=(const double &rhs) const;
 
-    private:
-        double default_value = NAN;
-    };
+        polars::SeriesMask operator==(const Series &rhs) const;  // TODO test for floating point stability
 
-    class ExpMean : public WindowProcessor {
-    public:
-        ExpMean() = default;
+        polars::SeriesMask operator>(const Series &rhs) const;
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        polars::SeriesMask operator<(const Series &rhs) const;
 
-        inline double defaultValue() const {
-            return default_value;
-        }
+        Series operator+(const Series &rhs) const;
 
-    private:
-        double default_value = NAN;
-    };
+        Series operator-(const Series &rhs) const;
 
-    arma::vec calculate_window_weights(polars::WindowProcessor::WindowType win_type, arma::uword windowSize,
-                                       double alpha = -1);
+        Series operator*(const Series &rhs) const;
 
-    arma::vec _ewm_correction(const arma::vec &results, const arma::vec &v0, polars::WindowProcessor::WindowType win_type);
+        bool equals(const Series &rhs) const;
 
-}  // polars
+        bool almost_equals(const Series &rhs) const;
 
+        Series iloc(const arma::uvec &pos) const;
 
-class Series {
-public:
-    using SeriesMask=polars::SeriesMask;
-    typedef arma::uword SeriesSize;
+        double iloc(arma::uword pos) const;
 
-    Series();
+        Series loc(const arma::vec &index_labels) const;
 
-    Series(const arma::vec &v, const arma::vec &t);
+        Series loc(arma::uword) const;
 
-    static Series from_vect(std::vector<double> &t_v, std::vector<double> &v_v);
+        Series where(const polars::SeriesMask &condition, double other = NAN) const;
 
-    polars::SeriesMask operator==(const int rhs) const;
+        Series diff() const;
 
-    polars::SeriesMask operator!=(const int rhs) const;
+        Series abs() const;
 
-    Series operator+(const double &rhs) const;
+        double quantile(double q = 0.5) const;
 
-    Series operator-(const double &rhs) const;
+        Series fillna(double value = 0.) const;
 
-    Series operator*(const double &rhs) const;
+        Series dropna() const;
 
-    polars::SeriesMask operator>(const double &rhs) const;
+        Series clip(double lower_limit, double upper_limit) const;
 
-    polars::SeriesMask operator>=(const double &rhs) const;
+        Series pow(double power) const;
 
-    polars::SeriesMask operator<=(const double &rhs) const;
-
-    polars::SeriesMask operator==(const Series &rhs) const;  // TODO test for floating point stability
-
-    polars::SeriesMask operator>(const Series &rhs) const;
-
-    polars::SeriesMask operator<(const Series &rhs) const;
-
-    Series operator+(const Series &rhs) const;
-
-    Series operator-(const Series &rhs) const;
-
-    Series operator*(const Series &rhs) const;
-
-    bool equals(const Series &rhs) const;
-
-    bool almost_equals(const Series &rhs) const;
-
-    Series iloc(const arma::uvec &pos) const;
-
-    double iloc(arma::uword pos) const;
-
-    Series loc(const arma::vec &index_labels) const;
-
-    Series loc(arma::uword) const;
-
-    Series where(const SeriesMask &condition, double other=NAN) const;
-
-    Series diff() const;
-
-    Series abs() const;
-
-    double quantile(double q=0.5) const;
-
-    Series fillna(double value=0.) const;
-
-    Series dropna() const;
-
-    Series clip(double lower_limit, double upper_limit) const;
-
-    Series pow(double power) const;
-
-    Series rolling(SeriesSize windowSize,
-                       const polars::WindowProcessor &processor,
+        Series rolling(SeriesSize windowSize,
+                       const WindowProcessor &processor,
                        SeriesSize minPeriods = 0, /* 0 treated as windowSize */
                        bool center = true,
                        bool symmetric = false,
-                       polars::WindowProcessor::WindowType win_type = polars::WindowProcessor::WindowType::none,
+                       WindowProcessor::WindowType win_type = WindowProcessor::WindowType::none,
                        double alpha = -1) const;
 
-    Series apply(double (*f)(double)) const;
+        Series apply(double (*f)(double)) const;
 
-    double mean() const;
+        double mean() const;
 
-    SeriesSize size() const;
+        SeriesSize size() const;
 
-    arma::vec finiteValues() const;
+        arma::vec finiteValues() const;
 
-    SeriesSize finiteSize() const;
+        SeriesSize finiteSize() const;
 
-    // done this way so default copy / assignment works.
-    // todo; make copies of indices share memory as they are const?
-    const arma::vec index() const;
+        // done this way so default copy / assignment works.
+        // todo; make copies of indices share memory as they are const?
+        const arma::vec index() const;
 
-    const arma::vec values() const;
+        const arma::vec values() const;
 
-    static bool equal(const Series &lhs, const Series &rhs);
+        static bool equal(const Series &lhs, const Series &rhs);
 
-    static bool almost_equal(const Series &lhs, const Series &rhs);
+        static bool almost_equal(const Series &lhs, const Series &rhs);
 
-    static bool not_equal(const Series &lhs, const Series &rhs);
+        static bool not_equal(const Series &lhs, const Series &rhs);
 
-    Series index_as_series() const;
+        Series index_as_series() const;
 
-    std::map<double, double> to_map() const;
+        std::map<double, double> to_map() const;
 
-private:
-    arma::vec t;
-    arma::vec v;
-};
+    private:
+        arma::vec t;
+        arma::vec v;
+    };
 
-namespace polars { typedef Series Series; }  // Aid moving Series inside polars namespace
+    std::ostream &operator<<(std::ostream &os, const Series &ts);
+}
 
-std::ostream &operator<<(std::ostream &os, const Series &ts);
 
 #endif //ZIMMER_SERIES_H
