@@ -14,6 +14,8 @@ set(
         "${CPP_SOURCE_DIR}/Series.h"
         "${CPP_SOURCE_DIR}/SeriesMask.cpp"
         "${CPP_SOURCE_DIR}/SeriesMask.h"
+        "${CPP_SOURCE_DIR}/WindowProcessor.cpp"
+        "${CPP_SOURCE_DIR}/WindowProcessor.h"
 )
 
 add_library(polars_cpp ${CPP_SOURCES})

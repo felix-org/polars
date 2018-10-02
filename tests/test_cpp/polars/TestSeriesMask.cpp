@@ -8,6 +8,7 @@
 
 
 namespace SeriesMaskTests {
+    using Series = polars::Series;
     TEST(SeriesMask, equal) {
         EXPECT_PRED2(
                 polars::SeriesMask::equal,
