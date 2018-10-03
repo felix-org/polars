@@ -1,0 +1,120 @@
+version: 2
+jobs:
+  cpp_make_9_4:
+    macos:
+      xcode: "9.4.0"
+
+    steps:
+      - checkout
+      - run: xcodebuild -version
+      - run: git submodule update --init --recursive
+
+      - run:
+          name: Install CMake
+          environment:
+            HOMEBREW_NO_AUTO_UPDATE: 1
+          command: brew install cmake
+
+      - run:
+          name: Build with cmake
+          command: |
+            mkdir -p build/cmake-makefile-debug
+            cd build/cmake-makefile-debug
+            cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" ../..
+            cmake --build . --target all -- -j 2
+
+      - run:
+          name: Run c++ tests
+          command: build/cmake-makefile-debug/polars_cpp_test
+
+  cpp_make_10_0:
+    macos:
+      xcode: "10.0.0"
+
+    steps:
+      - checkout
+      - run: xcodebuild -version
+      - run: git submodule update --init --recursive
+
+      - run:
+          name: Install CMake
+          environment:
+            HOMEBREW_NO_AUTO_UPDATE: 1
+          command: brew install cmake
+
+      - run:
+          name: Build with cmake
+          command: |
+            mkdir -p build/cmake-makefile-debug
+            cd build/cmake-makefile-debug
+            cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" ../..
+            cmake --build . --target all -- -j 2
+
+      - run:
+          name: Run c++ tests
+          command: build/cmake-makefile-debug/polars_cpp_test
+
+  cpp_xcode_9_4:
+    macos:
+      xcode: "9.4.0"
+
+    steps:
+      - checkout
+      - run: xcodebuild -version
+      - run: git submodule update --init --recursive
+
+      - run:
+          name: Install CMake
+          environment:
+            HOMEBREW_NO_AUTO_UPDATE: 1
+          command: brew install cmake
+
+      - run:
+          name: Build with cmake
+          command: |
+            mkdir -p build/cmake-xcode-debug
+            cd build/cmake-xcode-debug
+            cmake -DCMAKE_BUILD_TYPE=Debug -G "Xcode" ../..
+            cmake --build . --target ALL_BUILD -- -j 2
+            cmake --build . --target polars_cpp_test -- -j 2
+
+      - run:
+          name: Run c++ tests
+          command: build/cmake-xcode-debug/Debug/polars_cpp_test
+
+  cpp_xcode_10_0:
+    macos:
+      xcode: "10.0.0"
+
+    steps:
+      - checkout
+      - run: xcodebuild -version
+      - run: git submodule update --init --recursive
+
+      - run:
+          name: Install CMake
+          environment:
+            HOMEBREW_NO_AUTO_UPDATE: 1
+          command: brew install cmake
+
+      - run:
+          name: Build with cmake
+          command: |
+            mkdir -p build/cmake-xcode-debug
+            cd build/cmake-xcode-debug
+            cmake -DCMAKE_BUILD_TYPE=Debug -G "Xcode" ../..
+            cmake --build . --target ALL_BUILD -- -j 2
+            cmake --build . --target polars_cpp_test -- -j 2
+
+      - run:
+          name: Run c++ tests
+          command: build/cmake-xcode-debug/Debug/polars_cpp_test
+
+workflows:
+  version: 2
+  test_all:
+    jobs:
+      - cpp_make_9_4
+      - cpp_xcode_9_4
+      - cpp_make_10_0
+      - cpp_xcode_10_0
