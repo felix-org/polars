@@ -79,7 +79,7 @@ What is coming up?
 * [ ] Example python bindings project
 * [ ] Further development and tests for TimeSeriesMask
 * [ ] LocalTimeSeries that works with `std::chrono::local_clock` where TimeSeries works with `std::chrono::system_clock` (i.e. utc)
-* [ ] Making `.rolling()` more pandas with `.rolling().mean()` syntax
+* [x] Making `.rolling()` more pandas with `.rolling().mean()` syntax
 * [ ] date literals for TimeSeries
 * [ ] `[]` syntax for subsetting Series
 * [ ] `EnumSeries` to support strongly typed categorical series
