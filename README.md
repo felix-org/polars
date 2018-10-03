@@ -63,6 +63,7 @@ Provides the following methods for a Series:
 * `.diff()`
 * `.clip()`
 * `.apply()`
+* `.is_empty()`
 * `<<` operator overloading (pretty printing)
 * `.rolling()` supporting mean, quantile, std, sum for flat windows, triangle windows, and (approximated) exponential windows
 

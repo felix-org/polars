@@ -8,6 +8,7 @@ add_executable(
         ${TEST_CPP_SOURCE_DIR}/test_numc.cpp
         ${TEST_CPP_SOURCE_DIR}/TestSeries.cpp
         ${TEST_CPP_SOURCE_DIR}/TestSeriesMask.cpp
+        ${TEST_CPP_SOURCE_DIR}/TestTimeSeries.cpp
         ${TEST_CPP_SOURCE_DIR}/TestWindowProcessor.cpp
 )
 

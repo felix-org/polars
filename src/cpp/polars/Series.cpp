@@ -505,6 +505,10 @@ namespace polars {
         return m;
     }
 
+    bool Series::is_empty() const {
+        return (index().is_empty() & values().is_empty());
+    }
+
     /**
      * Add support for pretty printing of a Series object.
      * @param os the output stream that will be written to
