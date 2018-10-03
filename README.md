@@ -74,12 +74,12 @@ To make working with time series easier, we also have an experimental TimeSeries
 
 
 What is coming up?
-* All unit tested (with moving CI to open source project) - Circle has granted us free containers just need to switch on
-* testing in docker against ubuntu environment
-* Example python bindings project
-* Further development and tests for TimeSeriesMask
-* LocalTimeSeries that works with `std::chrono::local_clock` where TimeSeries works with `std::chrono::system_clock` (i.e. utc)
-* Making `.rolling()` more pandas with `.rolling().mean()` syntax
-* date literals for TimeSeries
-* `[]` syntax for subsetting Series
-* `EnumSeries` to support strongly typed categorical series
+* [x] All unit tested (with moving CI to open source project) - Circle has granted us free containers just need to switch on
+* [x] testing in docker against ubuntu environment
+* [ ] Example python bindings project
+* [ ] Further development and tests for TimeSeriesMask
+* [ ] LocalTimeSeries that works with `std::chrono::local_clock` where TimeSeries works with `std::chrono::system_clock` (i.e. utc)
+* [ ] Making `.rolling()` more pandas with `.rolling().mean()` syntax
+* [ ] date literals for TimeSeries
+* [ ] `[]` syntax for subsetting Series
+* [ ] `EnumSeries` to support strongly typed categorical series
