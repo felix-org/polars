@@ -235,7 +235,7 @@ namespace polars {
     }
 
 
-    arma::vec polars::calculate_window_weights(
+    arma::vec calculate_window_weights(
             polars::WindowProcessor::WindowType win_type,
             arma::uword windowSize,
             double alpha
@@ -253,7 +253,7 @@ namespace polars {
     }
 
 
-    arma::vec polars::_ewm_correction(const arma::vec &results, const arma::vec &vals,
+    arma::vec _ewm_correction(const arma::vec &results, const arma::vec &vals,
                                       polars::WindowProcessor::WindowType win_type) {
         /* Method that shifts result from rolling average with exp window so it yields correct normalisation and allows usage
          * of rolling method hereby implemented.
