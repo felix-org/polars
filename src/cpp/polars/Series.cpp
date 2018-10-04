@@ -400,12 +400,33 @@ namespace polars {
     }
 
 
+    double Series::sum() const {
+        arma::vec finites = finiteValues();
+        if (finites.size() == 0) {
+            return NAN;
+        } else {
+            return arma::sum(finites);
+        }
+    }
+
+
     double Series::mean() const {
         arma::vec finites = finiteValues();
         if (finites.size() == 0) {
             return NAN;
         } else {
             return arma::mean(finites);
+        }
+    }
+
+
+    double Series::std() const {
+        arma::vec finites = finiteValues();
+        if (finites.size() == 0) {
+            return NAN;
+        } else {
+            auto dev = (*this) - this->mean();
+            return std::pow(dev.pow(2).mean(), 0.5);
         }
     }
 

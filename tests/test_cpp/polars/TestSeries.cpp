@@ -177,6 +177,19 @@ namespace SeriesTests {
         ) << "Expect " << "indices clipped to 2-3";
     }
 
+    TEST(Series, SumTest) {
+        EXPECT_EQ(Series(arma::vec({3, 4}), arma::vec({1, 2})).sum(), 7)
+                            << "Expect " << "simple sum() fixture result to be correct" << "";
+
+        ASSERT_TRUE(std::isnan(Series(arma::vec({}), arma::vec({})).sum()))
+                                    << "Expect " << "empty series sum() should be NAN" << "";
+
+        EXPECT_EQ(Series(arma::vec({3, NAN, 4}), arma::vec({1, 2, 3})).sum(), 7)
+                            << "Expect " << "simple sum() fixture result with NAN to be correct, ignoring NANs" << "";
+
+
+    }
+
     TEST(Series, MeanTest) {
         EXPECT_EQ(Series(arma::vec({3, 4}), arma::vec({1, 2})).mean(), 3.5)
                             << "Expect " << "simple mean() fixture result to be correct" << "";
@@ -186,6 +199,19 @@ namespace SeriesTests {
 
         EXPECT_EQ(Series(arma::vec({3, NAN, 4}), arma::vec({1, 2, 3})).mean(), 3.5)
                             << "Expect " << "simple mean() fixture result with NAN to be correct, ignoring NANs" << "";
+
+
+    }
+
+    TEST(Series, StdTest) {
+        EXPECT_EQ(Series(arma::vec({3, 4}), arma::vec({1, 2})).std(), 0.5)
+                            << "Expect " << "simple std() fixture result to be correct" << "";
+
+        ASSERT_TRUE(std::isnan(Series(arma::vec({}), arma::vec({})).std()))
+                                    << "Expect " << "empty series std() should be NAN" << "";
+
+        EXPECT_EQ(Series(arma::vec({3, NAN, 4}), arma::vec({1, 2, 3})).std(), 0.5)
+                            << "Expect " << "simple std() fixture result with NAN to be correct, ignoring NANs" << "";
 
 
     }

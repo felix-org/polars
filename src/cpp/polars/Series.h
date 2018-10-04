@@ -104,7 +104,11 @@ namespace polars {
 
         Series apply(double (*f)(double)) const;
 
+        double sum() const;
+
         double mean() const;
+
+        double std() const;
 
         SeriesSize size() const;
 
