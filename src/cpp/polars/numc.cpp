@@ -20,7 +20,7 @@ namespace polars {
             if ((lhs.n_cols != rhs.n_cols)) return false;
 
             for (arma::uword idx = 0; idx < lhs.n_rows; idx++) {
-                if (lhs[idx] != rhs[idx] && !(isnan(lhs[idx]) && isnan(rhs[idx]))) {
+                if (lhs[idx] != rhs[idx] && !(std::isnan(lhs[idx]) && std::isnan(rhs[idx]))) {
                     return false;
                 }
             }
@@ -48,7 +48,7 @@ namespace polars {
             if ((lhs.n_cols != rhs.n_cols)) return false;
 
             for (arma::uword idx = 0; idx < lhs.n_rows; idx++) {
-                if (!(isnan(lhs[idx]) && isnan(rhs[idx])) && !almost_equal_doubles(lhs[idx], rhs[idx])) {
+                if (!(std::isnan(lhs[idx]) && std::isnan(rhs[idx])) && !almost_equal_doubles(lhs[idx], rhs[idx])) {
                     return false;
                 }
             }

@@ -181,7 +181,7 @@ namespace SeriesTests {
         EXPECT_EQ(Series(arma::vec({3, 4}), arma::vec({1, 2})).mean(), 3.5)
                             << "Expect " << "simple mean() fixture result to be correct" << "";
 
-        ASSERT_TRUE(isnan(Series(arma::vec({}), arma::vec({})).mean()))
+        ASSERT_TRUE(std::isnan(Series(arma::vec({}), arma::vec({})).mean()))
                                     << "Expect " << "empty series mean() should be NAN" << "";
 
         EXPECT_EQ(Series(arma::vec({3, NAN, 4}), arma::vec({1, 2, 3})).mean(), 3.5)
