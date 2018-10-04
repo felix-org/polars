@@ -6,11 +6,12 @@
 #define POLARS_TIMESERIES_H
 
 #include <cassert>
-#include <vector>
 #include <cmath>
 #include <string>
-#include "armadillo"
+#include <vector>
+
 #include <chrono>
+#include "armadillo"
 #include "date/date.h"
 
 #include "Series.h"

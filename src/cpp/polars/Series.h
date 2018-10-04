@@ -136,9 +136,9 @@ namespace polars {
 
         bool empty() const;
 
-        Series head(int rows=5) const;
+        Series head(int n=5) const;
 
-        Series tail(int rows=5) const;
+        Series tail(int n=5) const;
 
     protected:
         arma::vec t;
