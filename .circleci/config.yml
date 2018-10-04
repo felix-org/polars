@@ -153,8 +153,8 @@ jobs:
       - run:
           name: Build polars with cmake
           command: |
-            mkdir -p build/cmake-makefile-debug
-            cd build/cmake-makefile-debug
+            mkdir -p build/polars
+            cd build/polars
             cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../../install -G "Unix Makefiles" ../..
             cmake --build . --target all -- -j 2
             cmake --build . --target install
@@ -163,14 +163,14 @@ jobs:
       - run:
           name: Build arctic with cmake
           command: |
-            mkdir -p build/cmake-makefile-debug
-            cd build/cmake-makefile-debug
+            mkdir -p build/arctic
+            cd build/arctic
             cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" ../../tests/example_project
             sudo cmake --build . --target all -- -j 2
 
       - run:
           name: Run artic project
-          command: build/cmake-makefile-debug/arctic_app
+          command: build/arctic/arctic_app
 
 workflows:
   version: 2
