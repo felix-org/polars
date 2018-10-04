@@ -53,7 +53,10 @@ Provides the following methods for a Series:
 * `.where()`
 * `.abs()`
 * `.pow()`
+* `.count()`
 * `.mean()`
+* `.sum()`
+* `.std()`
 * `.quantile()`
 * `.dropna()`
 * `.fillna()`
@@ -61,7 +64,7 @@ Provides the following methods for a Series:
 * `.clip()`
 * `.apply()`
 * `<<` operator overloading (pretty printing)
-* `.rolling()` supporting mean, quantile, std, sum for flat windows, triangle windows, and exponential windows (approximated)
+* `.rolling()` supporting mean, quantile, std, sum for flat windows, triangle windows, and (approximated) exponential windows
 
 It also provides a SeriesMask class which is the result of any comparison operation and is used as the input to `.where()`.
 
@@ -79,7 +82,7 @@ What is coming up?
 * [ ] Example python bindings project
 * [ ] Further development and tests for TimeSeriesMask
 * [ ] LocalTimeSeries that works with `std::chrono::local_clock` where TimeSeries works with `std::chrono::system_clock` (i.e. utc)
-* [ ] Making `.rolling()` more pandas with `.rolling().mean()` syntax
+* [x] Making `.rolling()` more pandas with `.rolling().mean()` syntax
 * [ ] date literals for TimeSeries
 * [ ] `[]` syntax for subsetting Series
 * [ ] `EnumSeries` to support strongly typed categorical series

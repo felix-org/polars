@@ -371,6 +371,22 @@ namespace polars {
 
     }
 
+    Window Series::rolling(SeriesSize windowSize,
+                   SeriesSize minPeriods,
+                   bool center,
+                   bool symmetric,
+                   polars::WindowProcessor::WindowType win_type,
+                   double alpha) const {
+        return Window((*this), windowSize, minPeriods, center, symmetric, win_type, alpha);
+    };
+
+    Rolling Series::rolling(SeriesSize windowSize,
+                    SeriesSize minPeriods,
+                    bool center,
+                    bool symmetric) const {
+        return Rolling((*this), windowSize, minPeriods, center, symmetric);
+    };
+
 
     Series Series::clip(double lower_limit, double upper_limit) const {
         SeriesMask upper = SeriesMask(values() < upper_limit, index());
@@ -384,12 +400,43 @@ namespace polars {
     }
 
 
+    int Series::count() const {
+        return finiteSize();
+    }
+
+
+    double Series::sum() const {
+        arma::vec finites = finiteValues();
+        if (finites.size() == 0) {
+            return NAN;
+        } else {
+            return arma::sum(finites);
+        }
+    }
+
+
     double Series::mean() const {
         arma::vec finites = finiteValues();
         if (finites.size() == 0) {
             return NAN;
         } else {
             return arma::mean(finites);
+        }
+    }
+
+
+    double Series::std(int ddof) const {
+        arma::vec finites = finiteValues();
+        if (ddof < 0) {
+            ddof = 0;
+        }
+        auto n = finites.size();
+        if (n <= ddof) {
+            return NAN;
+        } else {
+            auto dev = (*this) - this->mean();
+            auto squared_deviation = dev.pow(2);
+            return std::pow(squared_deviation.sum() / (n - ddof), 0.5);
         }
     }
 

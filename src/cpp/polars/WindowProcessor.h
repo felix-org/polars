@@ -21,7 +21,7 @@ namespace polars {
             expn
         };
 
-        virtual double processWindow(const Series &window, const arma::vec weights) const = 0;
+        virtual double processWindow(const Series &window, const arma::vec& weights) const = 0;
 
         virtual double defaultValue() const = 0;
     };
@@ -31,7 +31,7 @@ namespace polars {
     public:
         Quantile(double quantile);
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        double processWindow(const Series &window, const arma::vec& weights = {}) const;
 
         inline double defaultValue() const {
             return NAN;
@@ -45,7 +45,7 @@ namespace polars {
     public:
         Sum() = default;
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        double processWindow(const Series &window, const arma::vec& weights = {}) const;
 
         inline double defaultValue() const {
             return NAN;
@@ -58,7 +58,7 @@ namespace polars {
 
         Count(double default_value);
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        double processWindow(const Series &window, const arma::vec& weights = {}) const;
 
         inline double defaultValue() const {
             return default_value;
@@ -74,7 +74,23 @@ namespace polars {
 
         Mean(double default_value);
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        double processWindow(const Series &window, const arma::vec& weights = {}) const;
+
+        inline double defaultValue() const {
+            return default_value;
+        }
+
+    private:
+        double default_value = NAN;
+    };
+
+    class Std : public WindowProcessor {
+    public:
+        Std() = default;
+
+        Std(double default_value);
+
+        double processWindow(const Series &window, const arma::vec& weights = {}) const;
 
         inline double defaultValue() const {
             return default_value;
@@ -88,7 +104,7 @@ namespace polars {
     public:
         ExpMean() = default;
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        double processWindow(const Series &window, const arma::vec& weights = {}) const;
 
         inline double defaultValue() const {
             return default_value;
@@ -102,6 +118,69 @@ namespace polars {
                                        double alpha = -1);
 
     arma::vec _ewm_correction(const arma::vec &results, const arma::vec &v0, polars::WindowProcessor::WindowType win_type);
+
+    class Rolling {
+    public:
+        Rolling(
+                const Series& ts,
+                arma::uword windowSize,
+                arma::uword minPeriods = 0, /* 0 treated as windowSize */
+                bool center = true,
+                bool symmetric = false)
+                :
+                ts_(ts),
+                windowSize_(windowSize),
+                minPeriods_(minPeriods),
+                center_(center),
+                symmetric_(symmetric)
+        {};
+
+        Series count();
+        Series sum();
+        Series mean();
+        Series std();
+        Series quantile(int q);
+    private:
+        const Series& ts_;
+        arma::uword windowSize_;
+        arma::uword minPeriods_;
+        bool center_;
+        bool symmetric_;
+    };
+
+
+    class Window {
+    public:
+        Window(
+                const Series &ts,
+                arma::uword windowSize,
+                arma::uword minPeriods = 0, /* 0 treated as windowSize */
+                bool center = true,
+                bool symmetric = false,
+                polars::WindowProcessor::WindowType win_type = polars::WindowProcessor::WindowType::none,
+                double alpha = -1)
+                :
+                ts_(ts),
+                windowSize_(windowSize),
+                minPeriods_(minPeriods),
+                center_(center),
+                symmetric_(symmetric),
+                win_type_(win_type),
+                alpha_(alpha) {};
+
+        Series mean();
+
+        Series sum();
+
+    private:
+        const Series &ts_;
+        arma::uword windowSize_;
+        arma::uword minPeriods_;
+        bool center_;
+        bool symmetric_;
+        polars::WindowProcessor::WindowType win_type_;
+        double alpha_;
+    };
 
 }  // polars
 
