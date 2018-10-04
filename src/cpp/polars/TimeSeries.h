@@ -33,10 +33,7 @@ namespace polars {
 
         TimeSeries() = default;
 
-        TimeSeries(arma::vec v0, std::vector<TimePointType> t0) {
-            v = v0;
-            t = chrono_to_double_vector(t0);
-        };
+        TimeSeries(arma::vec v0, std::vector<TimePointType> t0) : Series(v0, chrono_to_double_vector(t0)) {};
 
         std::vector<TimePointType> timestamps() const {
             // Pass indices and return vector of timepoints
