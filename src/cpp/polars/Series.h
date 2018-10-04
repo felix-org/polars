@@ -104,6 +104,8 @@ namespace polars {
 
         Series apply(double (*f)(double)) const;
 
+        int count() const;
+
         double sum() const;
 
         double mean() const;

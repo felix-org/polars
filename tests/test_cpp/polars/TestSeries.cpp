@@ -177,6 +177,18 @@ namespace SeriesTests {
         ) << "Expect " << "indices clipped to 2-3";
     }
 
+    TEST(Series, CountTest) {
+        EXPECT_EQ(Series(arma::vec({3, 4}), arma::vec({1, 2})).count(), 2)
+                            << "Expect " << "simple count() fixture result to be correct" << "";
+
+        EXPECT_EQ(Series().count(), 0) << "Expect " << "empty series count() should be 0" << "";
+
+        EXPECT_EQ(Series(arma::vec({3, NAN, 4}), arma::vec({1, 2, 3})).count(), 2)
+                            << "Expect " << "simple count() fixture result with NAN to be correct, ignoring NANs" << "";
+
+
+    }
+
     TEST(Series, SumTest) {
         EXPECT_EQ(Series(arma::vec({3, 4}), arma::vec({1, 2})).sum(), 7)
                             << "Expect " << "simple sum() fixture result to be correct" << "";

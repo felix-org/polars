@@ -400,6 +400,11 @@ namespace polars {
     }
 
 
+    int Series::count() const {
+        return finiteSize();
+    }
+
+
     double Series::sum() const {
         arma::vec finites = finiteValues();
         if (finites.size() == 0) {
