@@ -134,7 +134,13 @@ namespace polars {
 
         std::map<double, double> to_map() const;
 
-    private:
+        bool empty() const;
+
+        Series head(int n=5) const;
+
+        Series tail(int n=5) const;
+
+    protected:
         arma::vec t;
         arma::vec v;
     };

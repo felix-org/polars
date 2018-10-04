@@ -12,6 +12,7 @@ set(
         "${CPP_SOURCE_DIR}/numc.cpp"
         "${CPP_SOURCE_DIR}/Series.cpp"
         "${CPP_SOURCE_DIR}/Series.h"
+        "${CPP_SOURCE_DIR}/TimeSeries.h"
         "${CPP_SOURCE_DIR}/SeriesMask.cpp"
         "${CPP_SOURCE_DIR}/SeriesMask.h"
         "${CPP_SOURCE_DIR}/WindowProcessor.cpp"

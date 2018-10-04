@@ -540,4 +540,63 @@ namespace SeriesTests {
         EXPECT_TRUE(Series().to_map().empty());
     }
 
+    TEST(Series, head){
+
+        Series z = Series({10, 20, 30, 40, 50, 60}, {1, 2, 3, 4, 5, 6});
+
+        EXPECT_PRED2(
+                Series::equal,
+                z.head(),
+                Series({10, 20, 30, 40, 50}, {1, 2, 3, 4, 5})
+        );
+
+        EXPECT_PRED2(
+                Series::equal,
+                z.head(3),
+                Series({10, 20, 30}, {1, 2, 3,})
+        );
+
+        EXPECT_PRED2(
+                Series::equal,
+                z.head(0),
+                Series()
+        );
+
+        EXPECT_PRED2(
+                Series::equal,
+                z.head(10),
+                z
+        );
+
+    }
+
+    TEST(Series, tail){
+
+        Series z = Series({10, 20, 30, 40, 50, 60}, {1, 2, 3, 4, 5, 6});
+
+        EXPECT_PRED2(
+                Series::equal,
+                z.tail(),
+                Series({20, 30, 40, 50, 60}, {2, 3, 4, 5, 6})
+        );
+
+        EXPECT_PRED2(
+                Series::equal,
+                z.tail(3),
+                Series({40, 50, 60}, {4, 5, 6})
+        );
+
+        EXPECT_PRED2(
+                Series::equal,
+                z.tail(0),
+                Series()
+        );
+
+        EXPECT_PRED2(
+                Series::equal,
+                z.tail(10),
+                z
+        );
+    }
+
 } // namespace SeriesTests
