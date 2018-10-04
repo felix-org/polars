@@ -110,7 +110,7 @@ namespace polars {
 
         double mean() const;
 
-        double std() const;
+        double std(int ddof=1) const;
 
         SeriesSize size() const;
 

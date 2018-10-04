@@ -88,6 +88,38 @@ namespace WindowProcessorTests {
     }
 
 
+    TEST(Series, rolling_std) {
+        EXPECT_PRED2(
+                Series::equal,
+                Series().rolling(5, polars::Std()),
+                Series()
+        ) << "Expect " << "empty Series returns empty Series";
+
+        EXPECT_PRED2(
+                Series::equal,
+                Series({1, 2, 3.5, -1, NAN}, {1, 2, 3, 4, 5}).rolling(1, polars::Std()),
+                Series({NAN, NAN, NAN, NAN, NAN}, {1, 2, 3, 4, 5})
+        ) << "Expect " << "with a window of 1 std is undefined so returns NA";
+
+        EXPECT_PRED2(
+                Series::almost_equal,
+                Series({1, 2, 3.5, -1, NAN}, {1, 2, 3, 4, 5}).rolling(3, polars::Std()),
+                Series({NAN, arma::stddev(arma::vec{1, 2, 3.5}), arma::stddev(arma::vec{2, 3.5, -1}), NAN, NAN}, {1, 2, 3, 4, 5})
+        ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should be the std, not NAN";
+
+        EXPECT_PRED2(
+                Series::equal,
+                Series({1, 2, 3.5, -1, NAN}, {1, 2, 3, 4, 5}).rolling(3, polars::Std(), 2),
+                Series({
+                    arma::stddev(arma::vec{1, 2}),
+                    arma::stddev(arma::vec{1, 2, 3.5}),
+                    arma::stddev(arma::vec{2, 3.5, -1}),
+                    arma::stddev(arma::vec{3.5, -1}),
+                    NAN}, {1, 2, 3, 4, 5})
+        ) << "Expect " << "with window=3, min_periods=2 any windows with 2 non-NAN values should be the std, not NAN";
+    }
+
+
     TEST(Series, rolling_count) {
         EXPECT_PRED2(
                 Series::equal,

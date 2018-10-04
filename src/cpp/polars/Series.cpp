@@ -425,13 +425,18 @@ namespace polars {
     }
 
 
-    double Series::std() const {
+    double Series::std(int ddof) const {
         arma::vec finites = finiteValues();
-        if (finites.size() == 0) {
+        if (ddof < 0) {
+            ddof = 0;
+        }
+        auto n = finites.size();
+        if (n <= ddof) {
             return NAN;
         } else {
             auto dev = (*this) - this->mean();
-            return std::pow(dev.pow(2).mean(), 0.5);
+            auto squared_deviation = dev.pow(2);
+            return std::pow(squared_deviation.sum() / (n - ddof), 0.5);
         }
     }
 

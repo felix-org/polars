@@ -84,6 +84,22 @@ namespace polars {
         double default_value = NAN;
     };
 
+    class Std : public WindowProcessor {
+    public:
+        Std() = default;
+
+        Std(double default_value);
+
+        double processWindow(const Series &window, const arma::vec& weights = {}) const;
+
+        inline double defaultValue() const {
+            return default_value;
+        }
+
+    private:
+        double default_value = NAN;
+    };
+
     class ExpMean : public WindowProcessor {
     public:
         ExpMean() = default;
@@ -119,10 +135,11 @@ namespace polars {
                 symmetric_(symmetric)
         {};
 
-        Series mean();
-        Series quantile(int q);
-        Series sum();
         Series count();
+        Series sum();
+        Series mean();
+        Series std();
+        Series quantile(int q);
     private:
         const Series& ts_;
         arma::uword windowSize_;

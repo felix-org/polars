@@ -64,6 +64,16 @@ namespace polars {
         return polars::numc::sum_finite(weighted_values) / arma::sum(weights);
     }
 
+
+    polars::Std::Std(double default_value) : default_value(default_value) {}
+
+
+    double polars::Std::processWindow(const Series &window, const arma::vec& weights) const {
+        auto weighted_series = Series(window.values() % weights, window.index());
+        return weighted_series.std();
+    }
+
+
     double polars::ExpMean::processWindow(const Series &window, const arma::vec& weights) const {
         // This ensures deals with NAs like pandas for the case ignore_na = False which is the default setting.
         arma::vec weights_for_sum = weights.elem(arma::find_finite(window.values()));
@@ -71,20 +81,24 @@ namespace polars {
         return polars::numc::sum_finite(weighted_values) / arma::sum(weights_for_sum);
     }
 
-    Series Rolling::mean() {
-        return ts_.rolling(windowSize_, Mean(), minPeriods_, center_, symmetric_);
-    }
-
-    Series Rolling::quantile(int q) {
-        return ts_.rolling(windowSize_, Quantile(q), minPeriods_, center_, symmetric_);
+    Series Rolling::count() {
+        return ts_.rolling(windowSize_, Count(), minPeriods_, center_, symmetric_);
     }
 
     Series Rolling::sum() {
         return ts_.rolling(windowSize_, Sum(), minPeriods_, center_, symmetric_);
     }
 
-    Series Rolling::count() {
-        return ts_.rolling(windowSize_, Count(), minPeriods_, center_, symmetric_);
+    Series Rolling::mean() {
+        return ts_.rolling(windowSize_, Mean(), minPeriods_, center_, symmetric_);
+    }
+
+    Series Rolling::std() {
+        return ts_.rolling(windowSize_, Std(), minPeriods_, center_, symmetric_);
+    }
+
+    Series Rolling::quantile(int q) {
+        return ts_.rolling(windowSize_, Quantile(q), minPeriods_, center_, symmetric_);
     }
 
     Series Window::mean() {

@@ -216,13 +216,20 @@ namespace SeriesTests {
     }
 
     TEST(Series, StdTest) {
-        EXPECT_EQ(Series(arma::vec({3, 4}), arma::vec({1, 2})).std(), 0.5)
+        auto root_2 = std::pow(2, .5);
+        EXPECT_FLOAT_EQ(Series(arma::vec({3, 4}), arma::vec({1, 2})).std(), 1 / root_2)
+                            << "Expect " << "simple std() fixture result to be correct" << "";
+
+        EXPECT_FLOAT_EQ(Series(arma::vec({3, 4}), arma::vec({1, 2})).std(0), 0.5)
                             << "Expect " << "simple std() fixture result to be correct" << "";
 
         ASSERT_TRUE(std::isnan(Series(arma::vec({}), arma::vec({})).std()))
                                     << "Expect " << "empty series std() should be NAN" << "";
 
-        EXPECT_EQ(Series(arma::vec({3, NAN, 4}), arma::vec({1, 2, 3})).std(), 0.5)
+        ASSERT_TRUE(std::isnan(Series(arma::vec({3}), arma::vec({1})).std()))
+                                    << "Expect " << "Series with 1 element std() should be NAN";
+
+        EXPECT_FLOAT_EQ(Series(arma::vec({3, NAN, 4}), arma::vec({1, 2, 3})).std(), 1 / root_2)
                             << "Expect " << "simple std() fixture result with NAN to be correct, ignoring NANs" << "";
 
 
