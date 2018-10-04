@@ -181,3 +181,4 @@ workflows:
       - xcode_9_4
       - xcode_10_0
       - debian_make
+      - example_project
