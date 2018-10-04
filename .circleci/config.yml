@@ -155,7 +155,7 @@ jobs:
           command: |
             mkdir -p build/cmake-makefile-debug
             cd build/cmake-makefile-debug
-            cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" ../..
+            cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../../install -G "Unix Makefiles" ../..
             cmake --build . --target all -- -j 2
             cmake --build . --target install
 
