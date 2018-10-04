@@ -143,4 +143,35 @@ namespace SeriesTests {
 
         EXPECT_TRUE(ts_empty.empty()) << "Expect " << " true since timeseries is empty";
     }
+
+    TEST(TimeSeries, days){
+        hours hrs(24);
+        // integer scale conversion with no precision loss: no cast
+        EXPECT_EQ(1, polars::days(hrs).count()) << "Expect " << " since 24 hours make 1 day";
+    }
+
+
+    TEST(TimeSeries, prettyprint){
+
+        std::stringstream out;
+        using TimePoint = time_point<system_clock, seconds>;
+
+        time_t t = 1525971600;
+        TimePoint t_p{duration_cast<seconds>(polars::unix_epoch_seconds(t))};
+
+        time_t t2 = 1525971780;
+        TimePoint t2_p{duration_cast<seconds>(polars::unix_epoch_seconds(t2))};
+
+        std::vector<TimePoint> tpoints = {t_p, t2_p};
+        arma::vec vals = {1,2};
+
+        // Build TimeSeries
+        polars::SecondsTimeSeries ts = polars::SecondsTimeSeries(vals, tpoints);
+
+        // Check output
+        out << ts;
+
+        EXPECT_EQ(out.str(), "Timeseries: \nTimestamp:\n2018 May 10 17:00:00 Value:\n1Timestamp:\n2018 May 10 17:03:00 Value:\n2");
+
+    }
 } // namespace TimeSeriesTests

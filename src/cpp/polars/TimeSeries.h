@@ -8,9 +8,10 @@
 #include <cassert>
 #include <vector>
 #include <cmath>
+#include <string>
 #include "armadillo"
 #include <chrono>
-#include <date/date.h>
+#include "date/date.h"
 
 #include "Series.h"
 
@@ -91,8 +92,7 @@ namespace polars {
 
 
         static TimePointType double_to_chrono(double timestamp){
-            TimePointType t_p{duration_cast<typename TimePointType::duration>(unix_epoch_seconds(timestamp))};
-            return t_p;
+            return TimePointType{duration_cast<typename TimePointType::duration>(unix_epoch_seconds(timestamp))};
         };
 
         static std::vector<TimePointType> double_to_chrono_vector(const arma::vec& tstamps){
@@ -107,16 +107,36 @@ namespace polars {
 
     };
 
+    typedef std::chrono::duration<float, std::ratio<24*60*60, 1>> days;
+
     typedef TimeSeries<time_point<system_clock, milliseconds>> MillisecondsTimeSeries;
     typedef TimeSeries<time_point<system_clock, seconds>> SecondsTimeSeries;
     typedef TimeSeries<time_point<system_clock, minutes>> MinutesTimeSeries;
-    typedef TimeSeries<date::local_time<milliseconds>> LocalMSTimeSeries;
+    typedef TimeSeries<time_point<system_clock, hours>> HoursTimeSeries;
+    typedef TimeSeries<time_point<system_clock, days>> DaysTimeSeries;
+    typedef TimeSeries<date::local_time<milliseconds>> LocalMillisecondsTimeSeries;
+    typedef TimeSeries<date::local_time<seconds>> LocalSecondsTimeSeries;
+    typedef TimeSeries<date::local_time<minutes>> LocalMinutesTimeSeries;
+    typedef TimeSeries<date::local_time<hours>> LocalHoursTimeSeries;
+    typedef TimeSeries<date::local_time<days>> LocalDaysTimeSeries;
 
 }
 
 template<class TimePointType>
 std::ostream &operator<<(std::ostream &os, const polars::TimeSeries<TimePointType> &ts) {
-    return os << "TimeSeries:\ntimestamps\n" << ts.timestamps() << "values\n" << ts.values();
+
+    std::vector<TimePointType> timestamps = ts.timestamps();
+    arma::vec vals = ts.values();
+
+    os << "Timeseries: \n";
+
+    for(int i = 0; i < timestamps.size() ; i++){
+        time_t elem = std::chrono::system_clock::to_time_t(timestamps[i]);
+        double val = vals[i];
+        os << "Timestamp:\n" << std::put_time(std::gmtime(&elem), "%Y %b %d %H:%M:%S") << " Value:\n" << val;
+    }
+
+    return os;
 }
 
 
