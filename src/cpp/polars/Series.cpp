@@ -511,8 +511,25 @@ namespace polars {
 
     Series Series::head(int rows) const  {
         Series ser = Series(values(), index());
-        arma::uvec indices = arma::conv_to<arma::uvec>::from(polars::numc::arange(0, rows));
-        return ser.iloc(indices);
+        if(rows >= ser.size()){
+            return ser;
+        } else {
+            arma::uvec indices = arma::conv_to<arma::uvec>::from(polars::numc::arange(0, rows));
+            return ser.iloc(indices);
+        }
+    }
+
+    Series Series::tail(int rows) const  {
+
+        Series ser = Series(values(), index());
+
+        if(rows >= ser.size()){
+            return ser;
+        } else {
+            arma::uword l = ser.size() - rows;
+            arma::uvec indices = arma::conv_to<arma::uvec>::from(polars::numc::arange(l, ser.size()));
+            return ser.iloc(indices);
+        }
     }
 
     /**

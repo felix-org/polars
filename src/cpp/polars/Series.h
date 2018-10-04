@@ -138,6 +138,8 @@ namespace polars {
 
         Series head(int rows=5) const;
 
+        Series tail(int rows=5) const;
+
     protected:
         arma::vec t;
         arma::vec v;

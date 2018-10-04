@@ -174,4 +174,38 @@ namespace SeriesTests {
         EXPECT_EQ(out.str(), "Timeseries: \nTimestamp:\n2018 May 10 17:00:00 Value:\n1Timestamp:\n2018 May 10 17:03:00 Value:\n2");
 
     }
+
+    TEST(TimeSeries, head_and_tail){
+        // Method work as expected
+        using TimePoint = time_point<system_clock, seconds>;
+
+        time_t t1 = 1525971600;
+        time_t t2 = 1525971780;
+        time_t t3 = 1525971960;
+
+        TimePoint t1_p{duration_cast<minutes>(polars::unix_epoch_seconds(t1))};
+        TimePoint t2_p{duration_cast<minutes>(polars::unix_epoch_seconds(t2))};
+        TimePoint t3_p{duration_cast<minutes>(polars::unix_epoch_seconds(t3))};
+
+        std::vector<TimePoint> tpoints = {t1_p, t2_p, t3_p};
+        arma::vec vals = {1, 2 ,3};
+
+        // Build TimeSeries
+        polars::SecondsTimeSeries ts = polars::SecondsTimeSeries(vals, tpoints);
+
+        EXPECT_PRED2(
+            polars::TimeSeries<TimePoint>::equal,
+            ts.head(2),
+            polars::SecondsTimeSeries({1,2}, {t1_p, t2_p})
+        );
+
+        EXPECT_PRED2(
+                polars::TimeSeries<TimePoint>::equal,
+                ts.tail(2),
+                polars::SecondsTimeSeries({2, 3}, {t2_p, t3_p})
+        );
+
+        EXPECT_PRED2(polars::TimeSeries<TimePoint>::equal, ts.head(10) ,ts);
+
+    }
 } // namespace TimeSeriesTests
