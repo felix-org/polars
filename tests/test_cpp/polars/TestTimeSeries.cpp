@@ -141,6 +141,6 @@ namespace SeriesTests {
         std::vector<TimePoint> index_labels_empty = {};
         polars::MinutesTimeSeries ts_empty  = ts.loc(index_labels_empty);
 
-        EXPECT_TRUE(ts_empty.is_empty()) << "Expect " << " true since timeseries is empty";
+        EXPECT_TRUE(ts_empty.empty()) << "Expect " << " true since timeseries is empty";
     }
 } // namespace TimeSeriesTests

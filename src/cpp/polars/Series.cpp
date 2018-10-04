@@ -505,7 +505,7 @@ namespace polars {
         return m;
     }
 
-    bool Series::is_empty() const {
+    bool Series::empty() const {
         return (index().is_empty() & values().is_empty());
     }
 

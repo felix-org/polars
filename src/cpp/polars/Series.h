@@ -134,7 +134,7 @@ namespace polars {
 
         std::map<double, double> to_map() const;
 
-        bool is_empty() const;
+        bool empty() const;
 
     protected:
         arma::vec t;
