@@ -22,7 +22,7 @@ namespace polars {
     }
 
 
-    double Quantile::processWindow(const Series &window, const arma::vec weights) const {
+    double Quantile::processWindow(const Series &window, const arma::vec& weights) const {
 
         arma::vec v;
         v = weights % window.values();
@@ -42,7 +42,7 @@ namespace polars {
     }
 
 
-    double polars::Sum::processWindow(const Series &window, const arma::vec weights) const {
+    double polars::Sum::processWindow(const Series &window, const arma::vec& weights) const {
         return polars::numc::sum_finite((weights % window.values()));
     }
 
@@ -50,7 +50,7 @@ namespace polars {
     polars::Count::Count(double default_value) : default_value(default_value) {}
 
 
-    double polars::Count::processWindow(const Series &window, const arma::vec weights) const {
+    double polars::Count::processWindow(const Series &window, const arma::vec& weights) const {
         return window.finiteSize();
     }
 
@@ -58,13 +58,13 @@ namespace polars {
     polars::Mean::Mean(double default_value) : default_value(default_value) {}
 
 
-    double polars::Mean::processWindow(const Series &window, const arma::vec weights) const {
+    double polars::Mean::processWindow(const Series &window, const arma::vec& weights) const {
         // This method doesn't support exponential window so results will be faulty. Please use ExpMean instead.
         arma::vec weighted_values = window.values() % weights;
         return polars::numc::sum_finite(weighted_values) / arma::sum(weights);
     }
 
-    double polars::ExpMean::processWindow(const Series &window, const arma::vec weights) const {
+    double polars::ExpMean::processWindow(const Series &window, const arma::vec& weights) const {
         // This ensures deals with NAs like pandas for the case ignore_na = False which is the default setting.
         arma::vec weights_for_sum = weights.elem(arma::find_finite(window.values()));
         arma::vec weighted_values = window.values() % weights;
@@ -79,12 +79,24 @@ namespace polars {
         return ts_.rolling(windowSize_, Quantile(q), minPeriods_, center_, symmetric_);
     }
 
-    Series Window::mean() {
-        return ts_.rolling(windowSize_, Mean(), minPeriods_, center_, symmetric_, win_type_, alpha_);
+    Series Rolling::sum() {
+        return ts_.rolling(windowSize_, Sum(), minPeriods_, center_, symmetric_);
     }
 
-    Series Window::quantile(int q) {
-        return ts_.rolling(windowSize_, Quantile(q), minPeriods_, center_, symmetric_, win_type_, alpha_);
+    Series Rolling::count() {
+        return ts_.rolling(windowSize_, Count(), minPeriods_, center_, symmetric_);
+    }
+
+    Series Window::mean() {
+        if (win_type_ == WindowProcessor::WindowType::expn) {
+            return ts_.rolling(windowSize_, ExpMean(), minPeriods_, center_, symmetric_, win_type_, alpha_);
+        } else {
+            return ts_.rolling(windowSize_, Mean(), minPeriods_, center_, symmetric_, win_type_, alpha_);
+        }
+    }
+
+    Series Window::sum() {
+        return ts_.rolling(windowSize_, Sum(), minPeriods_, center_, symmetric_, win_type_, alpha_);
     }
 
 } // polars

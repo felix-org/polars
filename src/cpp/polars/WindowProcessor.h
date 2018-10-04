@@ -21,7 +21,7 @@ namespace polars {
             expn
         };
 
-        virtual double processWindow(const Series &window, const arma::vec weights) const = 0;
+        virtual double processWindow(const Series &window, const arma::vec& weights) const = 0;
 
         virtual double defaultValue() const = 0;
     };
@@ -31,7 +31,7 @@ namespace polars {
     public:
         Quantile(double quantile);
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        double processWindow(const Series &window, const arma::vec& weights = {}) const;
 
         inline double defaultValue() const {
             return NAN;
@@ -45,7 +45,7 @@ namespace polars {
     public:
         Sum() = default;
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        double processWindow(const Series &window, const arma::vec& weights = {}) const;
 
         inline double defaultValue() const {
             return NAN;
@@ -58,7 +58,7 @@ namespace polars {
 
         Count(double default_value);
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        double processWindow(const Series &window, const arma::vec& weights = {}) const;
 
         inline double defaultValue() const {
             return default_value;
@@ -74,7 +74,7 @@ namespace polars {
 
         Mean(double default_value);
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        double processWindow(const Series &window, const arma::vec& weights = {}) const;
 
         inline double defaultValue() const {
             return default_value;
@@ -88,7 +88,7 @@ namespace polars {
     public:
         ExpMean() = default;
 
-        double processWindow(const Series &window, const arma::vec weights = {}) const;
+        double processWindow(const Series &window, const arma::vec& weights = {}) const;
 
         inline double defaultValue() const {
             return default_value;
@@ -121,6 +121,8 @@ namespace polars {
 
         Series mean();
         Series quantile(int q);
+        Series sum();
+        Series count();
     private:
         const Series& ts_;
         arma::uword windowSize_;
@@ -151,7 +153,7 @@ namespace polars {
 
         Series mean();
 
-        Series quantile(int q);
+        Series sum();
 
     private:
         const Series &ts_;
