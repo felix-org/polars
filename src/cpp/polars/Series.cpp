@@ -509,6 +509,12 @@ namespace polars {
         return (index().is_empty() & values().is_empty());
     }
 
+    Series Series::head(int rows) const  {
+        Series ser = Series(values(), index());
+        arma::uvec indices = arma::conv_to<arma::uvec>::from(polars::numc::arange(0, rows));
+        return ser.iloc(indices);
+    }
+
     /**
      * Add support for pretty printing of a Series object.
      * @param os the output stream that will be written to
