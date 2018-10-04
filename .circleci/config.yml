@@ -165,7 +165,7 @@ jobs:
           command: |
             mkdir -p build/arctic
             cd build/arctic
-            cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" ../../tests/example_project
+            cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MODULE_PATH=../../install -G "Unix Makefiles" ../../tests/example_project
             sudo cmake --build . --target all -- -j 2
 
       - run:
