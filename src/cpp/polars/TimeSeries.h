@@ -26,11 +26,14 @@ namespace polars {
     class TimeSeries : public Series {
 
     public:
+        // TODO:: Expose methods as required
         using Series::loc;
+        using Series::head;
+        using Series::tail;
 
         TimeSeries() = default;
 
-        TimeSeries(arma::vec v0, std::vector<TimePointType> t0){
+        TimeSeries(arma::vec v0, std::vector<TimePointType> t0) {
             v = v0;
             t = chrono_to_double_vector(t0);
         };
@@ -40,6 +43,7 @@ namespace polars {
             return double_to_chrono_vector(index());
         };
 
+        // TODO: Rename to_map once we sort out base methods, etc.
         std::map<TimePointType, double> to_timeseries_map() const {
 
             std::map<TimePointType, double> m;
@@ -54,6 +58,7 @@ namespace polars {
             return m;
         };
 
+        // TODO:: Make this more efficient.
         TimeSeries loc(const std::vector<TimePointType> &index_labels) const {
             std::vector<double> indices;
 
@@ -70,11 +75,23 @@ namespace polars {
             }
 
             if (indices.empty()) {
-                return TimeSeries();
+                return {};
             } else {
                 arma::uvec indices_v = arma::conv_to<arma::uvec>::from(indices);
-                return TimeSeries(values().elem(indices_v), double_to_chrono_vector(index().elem(indices_v)));
+                return {values().elem(indices_v), double_to_chrono_vector(index().elem(indices_v))};
             }
+        };
+
+        TimeSeries head(int n) const  {
+            Series ser(values(), index());
+            Series ser_head = ser.head(n);
+            return {ser_head.values(), double_to_chrono_vector(ser_head.index())};
+        };
+
+        TimeSeries tail(int n) const  {
+            Series ser(values(), index());
+            Series ser_tail = ser.tail(n);
+            return {ser_tail.values(), double_to_chrono_vector(ser_tail.index())};
         };
 
     private:
@@ -108,18 +125,16 @@ namespace polars {
 
     };
 
-    typedef std::chrono::duration<float, std::ratio<24*60*60, 1>> days;
-
     typedef TimeSeries<time_point<system_clock, milliseconds>> MillisecondsTimeSeries;
     typedef TimeSeries<time_point<system_clock, seconds>> SecondsTimeSeries;
     typedef TimeSeries<time_point<system_clock, minutes>> MinutesTimeSeries;
     typedef TimeSeries<time_point<system_clock, hours>> HoursTimeSeries;
-    typedef TimeSeries<time_point<system_clock, days>> DaysTimeSeries;
+    typedef TimeSeries<time_point<system_clock, date::days>> DaysTimeSeries;
     typedef TimeSeries<date::local_time<milliseconds>> LocalMillisecondsTimeSeries;
     typedef TimeSeries<date::local_time<seconds>> LocalSecondsTimeSeries;
     typedef TimeSeries<date::local_time<minutes>> LocalMinutesTimeSeries;
     typedef TimeSeries<date::local_time<hours>> LocalHoursTimeSeries;
-    typedef TimeSeries<date::local_time<days>> LocalDaysTimeSeries;
+    typedef TimeSeries<date::local_time<date::days>> LocalDaysTimeSeries;
 
 }
 
@@ -131,14 +146,21 @@ std::ostream &operator<<(std::ostream &os, const polars::TimeSeries<TimePointTyp
 
     os << "Timeseries: \n";
 
-    for(int i = 0; i < timestamps.size() ; i++){
-        time_t elem = std::chrono::system_clock::to_time_t(timestamps[i]);
-        double val = vals[i];
-        os << "Timestamp:\n" << std::put_time(std::gmtime(&elem), "%Y %b %d %H:%M:%S") << " Value:\n" << val;
+    for (auto& pair : ts.head(5).to_timeseries_map()) {
+        time_t elem = std::chrono::system_clock::to_time_t(pair.first);
+        os << "Timestamp:\n" << std::put_time(std::gmtime(&elem), "%Y %b %d %H:%M:%S") << " Value:\n" << pair.second;
+    }
+
+    if(ts.size() > 5){
+        os << "\n ... \n";
+
+        for (auto& pair : ts.tail(5).to_timeseries_map()) {
+            time_t elem = std::chrono::system_clock::to_time_t(pair.first);
+            os << "Timestamp:\n" << std::put_time(std::gmtime(&elem), "%Y %b %d %H:%M:%S") << " Value:\n" << pair.second;
+        }
     }
 
     return os;
 }
-
 
 #endif //POLARS_TIMESERIES_H

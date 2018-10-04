@@ -66,6 +66,7 @@ Provides the following methods for a Series:
 * `.empty()`
 * `.head()`
 * `.tail()`
+* `.to_timeseries_map()`
 * `<<` operator overloading (pretty printing)
 * `.rolling()` supporting mean, quantile, std, sum for flat windows, triangle windows, and (approximated) exponential windows
 

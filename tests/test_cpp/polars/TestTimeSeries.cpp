@@ -144,14 +144,9 @@ namespace SeriesTests {
         EXPECT_TRUE(ts_empty.empty()) << "Expect " << " true since timeseries is empty";
     }
 
-    TEST(TimeSeries, days){
-        hours hrs(24);
-        // integer scale conversion with no precision loss: no cast
-        EXPECT_EQ(1, polars::days(hrs).count()) << "Expect " << " since 24 hours make 1 day";
-    }
-
-
     TEST(TimeSeries, prettyprint){
+
+        // TODO: Add test for larger timeseries.
 
         std::stringstream out;
         using TimePoint = time_point<system_clock, seconds>;

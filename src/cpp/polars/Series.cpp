@@ -146,6 +146,8 @@ namespace polars {
 // Location.
 
 // by  position of the indices
+
+    // TODO: Add slicing logic of the form .iloc(int start, int stop, int step=1) so it can be called like ser.iloc(0, -10).
     Series Series::iloc(const arma::uvec &pos) const {
         return Series(values().elem(pos), index().elem(pos));
     }
@@ -509,8 +511,9 @@ namespace polars {
         return (index().is_empty() & values().is_empty());
     }
 
+    // TODO: Modify head once iloc has been refactored to accept slicing logic.
     Series Series::head(int n) const  {
-        Series ser = Series(values(), index());
+        Series ser(values(), index());
         if(n >= ser.size()){
             return ser;
         } else {
@@ -519,9 +522,10 @@ namespace polars {
         }
     }
 
+    // TODO: Modify tail once iloc has been refactored to accept slicing logic.
     Series Series::tail(int n) const  {
 
-        Series ser = Series(values(), index());
+        Series ser(values(), index());
 
         if(n >= ser.size()){
             return ser;
@@ -539,6 +543,14 @@ namespace polars {
      * @return the ostream for further piping
      */
     std::ostream &operator<<(std::ostream &os, const Series &ts) {
-        return os << "Series:\nindices\n" << ts.index() << "values\n" << ts.values();
+
+        if(ts.size() >= 5){
+            os << "Series:\nindices\n" << ts.head(5).index() << "values\n" << ts.head(5).values();
+            os << "\n....\n";
+            os << "Series:\nindices\n" << ts.tail(5).index() << "values\n" << ts.tail(5).values();
+            return os;
+        } else {
+            return os << "Series:\nindices\n" << ts.index() << "values\n" << ts.values();
+        }
     }
 }; // polars
