@@ -53,7 +53,10 @@ Provides the following methods for a Series:
 * `.where()`
 * `.abs()`
 * `.pow()`
+* `.count()`
 * `.mean()`
+* `.sum()`
+* `.std()`
 * `.quantile()`
 * `.dropna()`
 * `.fillna()`
@@ -61,7 +64,7 @@ Provides the following methods for a Series:
 * `.clip()`
 * `.apply()`
 * `<<` operator overloading (pretty printing)
-* `.rolling()` supporting mean, quantile, std, sum for flat windows, triangle windows, and exponential windows (approximated)
+* `.rolling()` supporting mean, quantile, std, sum for flat windows, triangle windows, and (approximated) exponential windows
 
 It also provides a SeriesMask class which is the result of any comparison operation and is used as the input to `.where()`.
 
