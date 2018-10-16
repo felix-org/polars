@@ -2,9 +2,11 @@
 // Created by Calvin Giles on 2018-10-02.
 //
 
+#include "WindowProcessor.h"
+
 #include "Series.h"
 #include "numc.h"
-#include "WindowProcessor.h"
+
 
 namespace polars {
 

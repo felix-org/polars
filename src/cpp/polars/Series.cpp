@@ -16,9 +16,11 @@
  *
  */
 
-#include "SeriesMask.h"
 #include "Series.h"
+
+#include "SeriesMask.h"
 #include "numc.h"
+
 
 namespace polars {
 

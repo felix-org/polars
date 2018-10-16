@@ -5,16 +5,17 @@
 #ifndef POLARS_TIMESERIES_H
 #define POLARS_TIMESERIES_H
 
-#include <cassert>
-#include <cmath>
-#include <string>
-#include <vector>
+#include "Series.h"
 
-#include <chrono>
 #include "armadillo"
 #include "date/date.h"
 
-#include "Series.h"
+#include <cassert>
+#include <chrono>
+#include <cmath>
+#include <iomanip>
+#include <string>
+#include <vector>
 
 
 namespace polars {
