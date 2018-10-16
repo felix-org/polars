@@ -4,7 +4,6 @@ set(TEST_CPP_SOURCE_DIR "tests/test_cpp/polars")
 
 add_executable(
         polars_cpp_test
-        ${TEST_CPP_SOURCE_DIR}/Expect.h
         ${TEST_CPP_SOURCE_DIR}/test_numc.cpp
         ${TEST_CPP_SOURCE_DIR}/TestSeries.cpp
         ${TEST_CPP_SOURCE_DIR}/TestSeriesMask.cpp
