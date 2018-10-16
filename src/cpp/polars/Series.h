@@ -5,11 +5,13 @@
 #ifndef ZIMMER_SERIES_H
 #define ZIMMER_SERIES_H
 
-#include <cassert>
-#include <vector>
-#include <cmath>
-#include "armadillo"
 #include "WindowProcessor.h"
+
+#include "armadillo"
+
+#include <cassert>
+#include <cmath>
+#include <vector>
 
 
 namespace polars {

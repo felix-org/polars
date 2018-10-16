@@ -2,8 +2,9 @@
 // Created by Linda Uruchurtu on 30/08/2018.
 //
 
-#include "gtest/gtest.h"
 #include "polars/numc.h"
+
+#include "gtest/gtest.h"
 
 
 TEST(numc, arange) {

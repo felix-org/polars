@@ -1,11 +1,13 @@
 //
 // Created by Calvin Giles on 22/03/2018.
 //
-#include "gtest/gtest.h"
 
 #include "polars/Series.h"
+
 #include "polars/SeriesMask.h"
 #include "polars/numc.h"
+
+#include "gtest/gtest.h"
 
 
 namespace SeriesTests {

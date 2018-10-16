@@ -7,6 +7,7 @@
 
 #include "armadillo"
 
+
 namespace polars {
 
     class Series;
@@ -49,4 +50,5 @@ namespace polars {
     std::ostream &operator<<(std::ostream &os, const SeriesMask &ts);
 
 }
+
 #endif //ZIMMER_SERIESMASK_H

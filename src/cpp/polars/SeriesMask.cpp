@@ -2,10 +2,12 @@
 // Created by Calvin Giles on 23/03/2018.
 //
 
-#include <cassert>
+#include "SeriesMask.h"
 
 #include "Series.h"
-#include "SeriesMask.h"
+
+#include <cassert>
+
 
 namespace polars {
 

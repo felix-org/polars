@@ -8,7 +8,6 @@
 #include "armadillo"
 
 
-
 namespace polars {
     class Series;
 

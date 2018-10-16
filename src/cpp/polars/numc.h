@@ -5,12 +5,10 @@
 #ifndef ZIMMER_NUMC_H
 #define ZIMMER_NUMC_H
 
-#endif //ZIMMER_NUMC_H
-
+#include "armadillo"
 
 #include <cmath>
 #include <vector>
-#include "armadillo"
 
 namespace polars {
 
@@ -38,3 +36,5 @@ namespace polars {
 
     } // numc
 } // polars
+
+#endif //ZIMMER_NUMC_H
