@@ -23,13 +23,25 @@ namespace polars {
 
         SeriesMask(const arma::uvec &v, const arma::vec &t);
 
+        SeriesMask iloc(const arma::uvec &pos) const;
+
+        double iloc(arma::uword pos) const;
+
+        SeriesMask loc(const arma::vec &index_labels) const;
+
+        SeriesMask loc(arma::uword) const;
+
+        SeriesMask operator==(const bool rhs) const;
+        SeriesMask operator!=(const bool rhs) const;
+
+        SeriesMask operator==(const SeriesMask &rhs) const;
+        SeriesMask operator!=(const SeriesMask &rhs) const;
+
         SeriesMask operator|(const SeriesMask &rhs) const;
         SeriesMask operator&(const SeriesMask &rhs) const;
         SeriesMask operator!() const;
 
         bool equals(const SeriesMask &rhs) const;
-
-        Series to_series() const;
 
         SeriesSize size() const;
 
@@ -39,6 +51,14 @@ namespace polars {
         // todo; make copies of series share memory as they are const?
         const arma::vec index() const;
         const arma::uvec values() const;
+
+        std::map<double, bool> to_map() const;
+
+        bool empty() const;
+
+        SeriesMask head(int n=5) const;
+
+        SeriesMask tail(int n=5) const;
 
     private:
         arma::vec t;

@@ -1,11 +1,11 @@
 //
-// Created by Linda Uruchurtu on 03/10/2018.
+// Created by Calvin Giles on 2018-10-17.
 //
 
-#ifndef POLARS_TIMESERIES_H
-#define POLARS_TIMESERIES_H
+#ifndef POLARS_TIMESERIESMASK_H
+#define POLARS_TIMESERIESMASK_H
 
-#include "Series.h"
+#include "SeriesMask.h"
 
 #include "armadillo"
 #include "date/date.h"
@@ -24,34 +24,27 @@ namespace polars {
     typedef std::chrono::duration<double> unix_epoch_seconds;
 
     template<class TimePointType>
-    class TimeSeries : public Series {
+    class TimeSeriesMask : public SeriesMask {
 
     public:
         // TODO:: Expose methods as required
-        using Series::loc;
-        using Series::head;
-        using Series::tail;
+        using SeriesMask::loc;
+        using SeriesMask::head;
+        using SeriesMask::tail;
 
-        TimeSeries() = default;
+        TimeSeriesMask() = default;
 
-        TimeSeries(arma::vec v0, std::vector<TimePointType> t0) : Series(v0, chrono_to_double_vector(t0)) {};
+        TimeSeriesMask(arma::uvec v0, std::vector<TimePointType> t0) : SeriesMask(v0, chrono_to_double_vector(t0)) {};
 
-        static TimeSeries from_map(const std::map<TimePointType, double> &iv_map) {
-            arma::vec index(iv_map.size());
-            arma::vec values(iv_map.size());
-            int i = 0;
-            for (auto& pair : iv_map) {
-                index[i] = chrono_to_double(pair.first);
-                values[i] = pair.second;
-                ++i;
-            }
-            return {values, index};
-        }
+        std::vector<TimePointType> timestamps() const {
+            // Pass indices and return vector of timepoints
+            return double_to_chrono_vector(index());
+        };
 
         // TODO: Rename to_map once we sort out base methods, etc.
-        std::map<TimePointType, double> to_timeseries_map() const {
+        std::map<TimePointType, bool> to_timeseries_map() const {
 
-            std::map<TimePointType, double> m;
+            std::map<TimePointType, bool> m;
 
             std::vector<TimePointType> timepoints = double_to_chrono_vector(index());
 
@@ -64,7 +57,7 @@ namespace polars {
         };
 
         // TODO:: Make this more efficient.
-        TimeSeries loc(const std::vector<TimePointType> &index_labels) const {
+        TimeSeriesMask loc(const std::vector<TimePointType> &index_labels) const {
             std::vector<double> indices;
 
             // Turn time_points to doubles
@@ -87,26 +80,17 @@ namespace polars {
             }
         };
 
-        TimeSeries head(int n) const  {
-            Series ser(values(), index());
-            Series ser_head = ser.head(n);
+        TimeSeriesMask head(int n) const  {
+            auto ser_head = SeriesMask::head(n);
             return {ser_head.values(), double_to_chrono_vector(ser_head.index())};
         };
 
-        TimeSeries tail(int n) const  {
-            Series ser(values(), index());
-            Series ser_tail = ser.tail(n);
+        TimeSeriesMask tail(int n) const  {
+            auto ser_tail = SeriesMask::tail(n);
             return {ser_tail.values(), double_to_chrono_vector(ser_tail.index())};
         };
 
-        std::vector<TimePointType> timestamps() const {
-            // Pass indices and return vector of timepoints
-            return double_to_chrono_vector(index());
-        };
-
     private:
-        TimeSeries(arma::vec v0, arma::vec t0) : Series(v0, t0) {};
-
         static double chrono_to_double(TimePointType timepoint){
             return time_point_cast<typename TimePointType::duration>(timepoint).time_since_epoch().count();
         };
@@ -137,26 +121,26 @@ namespace polars {
 
     };
 
-    typedef TimeSeries<time_point<system_clock, milliseconds>> MillisecondsTimeSeries;
-    typedef TimeSeries<time_point<system_clock, seconds>> SecondsTimeSeries;
-    typedef TimeSeries<time_point<system_clock, minutes>> MinutesTimeSeries;
-    typedef TimeSeries<time_point<system_clock, hours>> HoursTimeSeries;
-    typedef TimeSeries<time_point<system_clock, date::days>> DaysTimeSeries;
-    typedef TimeSeries<date::local_time<milliseconds>> LocalMillisecondsTimeSeries;
-    typedef TimeSeries<date::local_time<seconds>> LocalSecondsTimeSeries;
-    typedef TimeSeries<date::local_time<minutes>> LocalMinutesTimeSeries;
-    typedef TimeSeries<date::local_time<hours>> LocalHoursTimeSeries;
-    typedef TimeSeries<date::local_time<date::days>> LocalDaysTimeSeries;
+    typedef TimeSeriesMask<time_point<system_clock, milliseconds>> MillisecondsTimeSeriesMask;
+    typedef TimeSeriesMask<time_point<system_clock, seconds>> SecondsTimeSeriesMask;
+    typedef TimeSeriesMask<time_point<system_clock, minutes>> MinutesTimeSeriesMask;
+    typedef TimeSeriesMask<time_point<system_clock, hours>> HoursTimeSeriesMask;
+    typedef TimeSeriesMask<time_point<system_clock, date::days>> DaysTimeSeriesMask;
+    typedef TimeSeriesMask<date::local_time<milliseconds>> LocalMillisecondsTimeSeriesMask;
+    typedef TimeSeriesMask<date::local_time<seconds>> LocalSecondsTimeSeriesMask;
+    typedef TimeSeriesMask<date::local_time<minutes>> LocalMinutesTimeSeriesMask;
+    typedef TimeSeriesMask<date::local_time<hours>> LocalHoursTimeSeriesMask;
+    typedef TimeSeriesMask<date::local_time<date::days>> LocalDaysTimeSeriesMask;
 
 }
 
 template<class TimePointType>
-std::ostream &operator<<(std::ostream &os, const polars::TimeSeries<TimePointType> &ts) {
+std::ostream &operator<<(std::ostream &os, const polars::TimeSeriesMask<TimePointType> &ts) {
 
     std::vector<TimePointType> timestamps = ts.timestamps();
-    arma::vec vals = ts.values();
+    arma::uvec vals = ts.values();
 
-    os << "Timeseries: \n";
+    os << "TimeSeriesMask: \n";
 
     for (auto& pair : ts.head(5).to_timeseries_map()) {
         time_t elem = std::chrono::system_clock::to_time_t(pair.first);
@@ -175,4 +159,4 @@ std::ostream &operator<<(std::ostream &os, const polars::TimeSeries<TimePointTyp
     return os;
 }
 
-#endif //POLARS_TIMESERIES_H
+#endif //POLARS_TIMESERIESMASK_H

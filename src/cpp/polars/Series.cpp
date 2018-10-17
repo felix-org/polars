@@ -36,8 +36,20 @@ namespace polars {
         //assert(t.n_rows == v.n_rows);
     };
 
-    Series Series::from_vect(std::vector<double> &t_v, std::vector<double> &v_v) {
+    Series Series::from_vect(const std::vector<double> &t_v, const std::vector<double> &v_v) {
         return Series(arma::conv_to<arma::vec>::from(v_v), arma::conv_to<arma::vec>::from(t_v));
+    }
+
+    Series Series::from_map(const std::map<double, double> &iv_map) {
+        arma::vec index(iv_map.size());
+        arma::vec values(iv_map.size());
+        int i = 0;
+        for (auto& pair : iv_map) {
+            index[i] = pair.first;
+            values[i] = pair.second;
+            ++i;
+        }
+        return {values, index};
     }
 
 
@@ -60,11 +72,18 @@ namespace polars {
     }
 
 
-// Series [op] Series methods
+    // Series [op] Series methods
     SeriesMask Series::operator==(const Series &rhs) const {
         // TODO: make this fast enough to always check at runtime
         //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
         return SeriesMask(values() == rhs.values(), index());
+    }
+
+
+    SeriesMask Series::operator!=(const Series &rhs) const {
+        // TODO: make this fast enough to always check at runtime
+        //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
+        return SeriesMask(values() != rhs.values(), index());
     }
 
 

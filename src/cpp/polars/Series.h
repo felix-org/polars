@@ -12,6 +12,7 @@
 #include <cassert>
 #include <cmath>
 #include <vector>
+#include <map>
 
 
 namespace polars {
@@ -26,11 +27,13 @@ namespace polars {
 
         Series(const arma::vec &v, const arma::vec &t);
 
-        static Series from_vect(std::vector<double> &t_v, std::vector<double> &v_v);
+        static Series from_vect(const std::vector<double> &t_v, const std::vector<double> &v_v);
 
-        polars::SeriesMask operator==(const int rhs) const;
+        static Series from_map(const std::map<double, double> &iv_map);
 
-        polars::SeriesMask operator!=(const int rhs) const;
+        SeriesMask operator==(const int rhs) const;
+
+        SeriesMask operator!=(const int rhs) const;
 
         Series operator+(const double &rhs) const;
 
@@ -38,17 +41,19 @@ namespace polars {
 
         Series operator*(const double &rhs) const;
 
-        polars::SeriesMask operator>(const double &rhs) const;
+        SeriesMask operator>(const double &rhs) const;
 
-        polars::SeriesMask operator>=(const double &rhs) const;
+        SeriesMask operator>=(const double &rhs) const;
 
-        polars::SeriesMask operator<=(const double &rhs) const;
+        SeriesMask operator<=(const double &rhs) const;
 
-        polars::SeriesMask operator==(const Series &rhs) const;  // TODO test for floating point stability
+        SeriesMask operator==(const Series &rhs) const;  // TODO test for floating point stability
 
-        polars::SeriesMask operator>(const Series &rhs) const;
+        SeriesMask operator!=(const Series &rhs) const;  // TODO test for floating point stability
 
-        polars::SeriesMask operator<(const Series &rhs) const;
+        SeriesMask operator>(const Series &rhs) const;
+
+        SeriesMask operator<(const Series &rhs) const;
 
         Series operator+(const Series &rhs) const;
 
@@ -68,7 +73,7 @@ namespace polars {
 
         Series loc(arma::uword) const;
 
-        Series where(const polars::SeriesMask &condition, double other = NAN) const;
+        Series where(const SeriesMask &condition, double other = NAN) const;
 
         Series diff() const;
 

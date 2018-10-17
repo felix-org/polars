@@ -16,6 +16,8 @@ namespace polars {
 
         bool almost_equal_doubles(double a, double b);
 
+        bool equal(const arma::uvec &lhs, const arma::uvec &rhs);
+
         bool equal_handling_nans(const arma::vec &lhs, const arma::vec &rhs);
 
         bool almost_equal_handling_nans(const arma::vec &lhs, const arma::vec &rhs);

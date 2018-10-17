@@ -13,7 +13,7 @@
 
 
 namespace TimeSeriesTests {
-
+    using namespace polars;
     using namespace std::chrono;
 
     TEST(TimeSeries, constructor) {
@@ -48,6 +48,22 @@ namespace TimeSeriesTests {
                 ts.index(),
                 arma::vec({1525971600000, 1525971780000}) // in milliseconds
         ) << "Expect " << " timestamps in milliseconds";
+
+        // TODO deal with duplicate values in constructor one way or the other
+    }
+
+    TEST(TimeSeries, from_map) {
+        using TP = time_point<system_clock, seconds>;
+
+        EXPECT_PRED2(SecondsTimeSeries::equal, SecondsTimeSeries::from_map({}), SecondsTimeSeries());
+
+        EXPECT_PRED2(
+                SecondsTimeSeries::equal,
+                SecondsTimeSeries::from_map({{TP(1s), 3},
+                                             {TP(2s), 4}}),
+                SecondsTimeSeries({3, 4}, {TP(1s), TP(2s)})
+        );
+
     }
 
     TEST(TimeSeries, get_timestamps) {
