@@ -116,7 +116,7 @@ namespace polars {
 
 
         static TimePointType double_to_chrono(double timestamp){
-            return TimePointType{duration_cast<typename TimePointType::duration>(unix_epoch_seconds(timestamp))};
+            return TimePointType{typename TimePointType::duration(std::lround(timestamp))};
         };
 
         static std::vector<TimePointType> double_to_chrono_vector(const arma::vec& tstamps){
