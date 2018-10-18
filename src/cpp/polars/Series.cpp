@@ -36,6 +36,14 @@ namespace polars {
         //assert(t.n_rows == v.n_rows);
     };
 
+    /**
+     * Converting constructor - this takes a SeriesMask and creates a Series from it.
+     *
+     * This is intentionally implicit (not marked explicit) so that a function expecting a Series can be passed a
+     * SeriesMask and it will be automatically converted since this is a loss-less process.
+     */
+    Series::Series(const SeriesMask &sm) : t(sm.index()), v(arma::conv_to<arma::vec>::from(sm.values())) {}
+
     Series Series::from_vect(const std::vector<double> &t_v, const std::vector<double> &v_v) {
         return Series(arma::conv_to<arma::vec>::from(v_v), arma::conv_to<arma::vec>::from(t_v));
     }
