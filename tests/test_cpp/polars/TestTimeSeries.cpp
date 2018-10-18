@@ -84,6 +84,26 @@ TEST(TimeSeries, from_map) {
             SecondsTimeSeries({3, 4}, {TP(1s), TP(2s)})
     );
 
+    using MTP = time_point<system_clock, minutes>;
+
+    auto ts = MinutesTimeSeries({3, 4}, {MTP(1min), MTP(2min)});
+    EXPECT_PRED2(
+            MinutesTimeSeries::equal,
+            MinutesTimeSeries::from_map(ts.to_timeseries_map()),
+            ts
+    );
+
+    using MSTP = time_point<system_clock, milliseconds>;
+
+    auto ms_ts = MillisecondsTimeSeries({3, 4}, {MSTP(1min), MSTP(2min)});
+    EXPECT_PRED2(
+            MillisecondsTimeSeries::equal,
+            MillisecondsTimeSeries::from_map(ms_ts.to_timeseries_map()),
+            ms_ts
+    );
+
+
+
 }
 
 TEST(TimeSeries, from_series) {
@@ -156,8 +176,48 @@ TEST(TimeSeries, to_timeseries_map) {
         i++;
     }
 
+    EXPECT_EQ(ts_map.count(t_p), 1) << "Expect to find the first time point in the map";
+    EXPECT_EQ(ts_map.count(t2_p), 1) << "Expect to find the second time point in the map";
+
     // Case in which we pass an empty timeseries
     polars::SecondsTimeSeries ts_empty = polars::SecondsTimeSeries();
+    std::map<TimePoint, double> ts_empty_map = ts_empty.to_timeseries_map();
+
+    EXPECT_TRUE(ts_empty_map.empty()) << "Expect " << " true since map is empty";
+};
+
+
+TEST(TimeSeries, to_timeseries_map__minutes) {
+
+    using TimePoint = time_point<system_clock, minutes>;
+
+    TimePoint t_p{minutes(1525971600 / 60)};
+
+    TimePoint t2_p{minutes(1525971780 / 60)};
+
+    std::vector<TimePoint> tpoints = {t_p, t2_p};
+    arma::vec vals = {1, 2};
+
+    // Build TimeSeries
+    polars::MinutesTimeSeries ts = polars::MinutesTimeSeries(vals, tpoints);
+
+    std::map<TimePoint, double> ts_map = ts.to_timeseries_map();
+
+    int i = 0;
+    for (auto &pair : ts_map) {
+        auto key = pair.first;
+        auto value = pair.second;
+
+        EXPECT_EQ(key.time_since_epoch().count(), (double) ts.index()[i]);
+        EXPECT_EQ(value, ts.values()[i]);
+        i++;
+    }
+
+    EXPECT_EQ(ts_map.count(t_p), 1) << "Expect to find the first time point in the map";
+    EXPECT_EQ(ts_map.count(t2_p), 1) << "Expect to find the second time point in the map";
+
+    // Case in which we pass an empty timeseries
+    polars::MinutesTimeSeries ts_empty = polars::MinutesTimeSeries();
     std::map<TimePoint, double> ts_empty_map = ts_empty.to_timeseries_map();
 
     EXPECT_TRUE(ts_empty_map.empty()) << "Expect " << " true since map is empty";
