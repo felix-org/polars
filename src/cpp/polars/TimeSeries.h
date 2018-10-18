@@ -7,6 +7,8 @@
 
 #include "Series.h"
 
+#include "TimeSeriesMask.h"
+
 #include "armadillo"
 #include "date/date.h"
 
@@ -25,7 +27,7 @@ namespace polars {
 
     template<class TimePointType>
     class TimeSeries : public Series {
-
+    using Mask = TimeSeriesMask<TimePointType>;
     public:
         // TODO:: Expose methods as required
         using Series::loc;
@@ -35,6 +37,14 @@ namespace polars {
         TimeSeries() = default;
 
         TimeSeries(arma::vec v0, std::vector<TimePointType> t0) : Series(v0, chrono_to_double_vector(t0)) {};
+
+        /**
+         * Converting constructor - this takes a TimeSeriesMask and creates a TimeSeries from it.
+         *
+         * This is intentionally implicit (not marked explicit) so that a function expecting a TimeSeries can be passed
+         * a TimeSeriesMask and it will be automatically converted since this is a loss-less process.
+         */
+        TimeSeries(const Mask &sm) : Series(arma::conv_to<arma::vec>::from(sm.values()), sm.index()) {}
 
         static TimeSeries from_map(const std::map<TimePointType, double> &iv_map) {
             arma::vec index(iv_map.size());

@@ -50,6 +50,26 @@ TEST(TimeSeries, constructor) {
     ) << "Expect " << " timestamps in milliseconds";
 
     // TODO deal with duplicate values in constructor one way or the other
+
+
+    using SecTP = time_point<system_clock, seconds>;
+    using HourTP = time_point<system_clock, hours>;
+
+    EXPECT_PRED2(DaysTimeSeries::equal, DaysTimeSeries(DaysTimeSeriesMask()), DaysTimeSeries())
+                        << "Expect constructing with empty SeriesMask is the same as empty constructor";
+    EXPECT_PRED2(
+            SecondsTimeSeries::equal,
+            SecondsTimeSeries(SecondsTimeSeriesMask({true, false}, {SecTP(1s), SecTP(2s)})),
+            SecondsTimeSeries({1, 0}, {SecTP(1s), SecTP(2s)})
+    ) << "Expect true becomes 1 and false becomes 0";
+
+    auto foo = [](HoursTimeSeries s) { return s; };
+    EXPECT_PRED2(
+            HoursTimeSeries::equal,
+            foo(HoursTimeSeriesMask({true, false}, {HourTP(1h), HourTP(2h)})),
+            HoursTimeSeries({1, 0}, {HourTP(1h), HourTP(2h)})
+    ) << "Expect implicit conversion from SeriesMask to Series is possible so that you can pass a SeriesMask to a function expecting a Series";
+
 }
 
 TEST(TimeSeries, from_map) {
