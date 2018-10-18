@@ -27,6 +27,8 @@ namespace polars {
 
         Series(const arma::vec &v, const arma::vec &t);
 
+        Series(const SeriesMask &sm);
+
         static Series from_vect(const std::vector<double> &t_v, const std::vector<double> &v_v);
 
         static Series from_map(const std::map<double, double> &iv_map);
