@@ -11,6 +11,18 @@ namespace polars {
 
     namespace numc {
 
+        // compare two uvecs
+        bool equal(const arma::uvec &lhs, const arma::uvec &rhs) {
+
+            //assert(lhs.n_cols == 1 && rhs.n_cols == 1);
+
+            if ((lhs.n_rows != rhs.n_rows)) return false;
+            if ((lhs.n_cols != rhs.n_cols)) return false;
+            if (arma::any(lhs != rhs)) return false;
+
+            return true;
+        }
+
         // compare two vecs, taking account of NANs (normal comparison operators don't give true for NAN == NAN)
         bool equal_handling_nans(const arma::vec &lhs, const arma::vec &rhs) {
 

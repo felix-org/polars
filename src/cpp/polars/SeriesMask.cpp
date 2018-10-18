@@ -5,6 +5,7 @@
 #include "SeriesMask.h"
 
 #include "Series.h"
+#include "numc.h"
 
 #include <cassert>
 
@@ -20,6 +21,79 @@ namespace polars {
         //assert(!arma::any(v > 1));  // Np SeriesMask values may be greater than 1
     };
 
+    // TODO: Add slicing logic of the form .iloc(int start, int stop, int step=1) so it can be called like ser.iloc(0, -10).
+    SeriesMask SeriesMask::iloc(const arma::uvec &pos) const {
+        return SeriesMask(values().elem(pos), index().elem(pos));
+    }
+
+
+    double SeriesMask::iloc(arma::uword pos) const {
+        arma::uvec val = values().elem(arma::uvec{pos});
+        return val[0];
+    }
+
+    // by label of indices
+    SeriesMask SeriesMask::loc(const arma::vec &index_labels) const {
+
+        std::vector<int> indices;
+
+        for (int j = 0; j < index_labels.n_elem; j++) {
+
+            arma::uvec idx = arma::find(index() == index_labels[j]);
+
+            if (!idx.empty()) {
+                indices.push_back(idx[0]);
+            }
+        }
+
+        if (indices.empty()) {
+            return SeriesMask();
+        } else {
+            arma::uvec indices_v = arma::conv_to<arma::uvec>::from(indices);
+            return SeriesMask(values().elem(indices_v), index().elem(indices_v));
+        }
+    }
+
+    SeriesMask SeriesMask::loc(arma::uword pos) const {
+        arma::uvec idx = arma::find(index() == pos);
+
+        if (!idx.empty()) {
+            return SeriesMask(values(), index()).iloc(idx);
+        } else {
+            return SeriesMask();
+        }
+    }
+
+    // Series [op] int methods
+    SeriesMask SeriesMask::operator==(const bool rhs) const {
+        arma::ivec rhs_vec = arma::ones<arma::ivec>(this->size()) * (int)rhs;
+        arma::ivec abs_diff = arma::abs(values() - rhs_vec);
+        // We can't use a large difference test like .1 despite the rhs is an int since the lhs is double so could be close.
+        return {abs_diff != 0, index()};
+    }
+
+
+    SeriesMask SeriesMask::operator!=(const bool rhs) const {  // TODO implement as negation of operator==
+        arma::ivec rhs_vec = arma::ones<arma::ivec>(this->size()) * (int)rhs;
+        arma::ivec abs_diff = arma::abs(values() - rhs_vec);
+        // We can't use a large difference test like .1 despite the rhs is an int since the lhs is double so could be close.
+        return {abs_diff == 0, index()};
+    }
+
+
+    // Series [op] Series methods
+    SeriesMask SeriesMask::operator==(const SeriesMask &rhs) const {
+        // TODO: make this fast enough to always check at runtime
+        //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
+        return SeriesMask(values() == rhs.values(), index());
+    }
+
+
+    SeriesMask SeriesMask::operator!=(const SeriesMask &rhs) const {
+        // TODO: make this fast enough to always check at runtime
+        //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
+        return SeriesMask(values() != rhs.values(), index());
+    }
 
     SeriesMask SeriesMask::operator|(const SeriesMask &rhs) const {
         //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
@@ -46,11 +120,6 @@ namespace polars {
 
         if (any(index() != rhs.index())) return false;
         return true;
-    }
-
-
-    Series SeriesMask::to_series() const {
-        return Series(arma::conv_to<arma::vec>::from(values()), index());
     }
 
     SeriesMask::SeriesSize SeriesMask::size() const {
@@ -90,4 +159,40 @@ namespace polars {
 
 
     const arma::uvec SeriesMask::values() const { return v; }
+
+
+    std::map<double, bool> SeriesMask::to_map() const {
+
+        std::map<double, bool> m;
+        // put pairs into map
+        for (int i = 0; i < size(); i++) {
+            m.insert(std::make_pair(index()[i], values()[i]));
+        }
+
+        return m;
+    }
+
+    bool SeriesMask::empty() const {
+        return (index().is_empty() & values().is_empty());
+    }
+
+    // TODO: Modify head once iloc has been refactored to accept slicing logic.
+    SeriesMask SeriesMask::head(int n) const  {
+        if(n >= size()){
+            return *this;
+        } else {
+            arma::uvec indices = arma::conv_to<arma::uvec>::from(polars::numc::arange(0, n));
+            return iloc(indices);
+        }
+    }
+
+    // TODO: Modify tail once iloc has been refactored to accept slicing logic.
+    SeriesMask SeriesMask::tail(int n) const  {
+        if(n >= size()){
+            return *this;
+        } else {
+            arma::uvec indices = arma::conv_to<arma::uvec>::from(polars::numc::arange(size() - n, size()));
+            return iloc(indices);
+        }
+    }
 }

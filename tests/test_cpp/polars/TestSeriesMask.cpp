@@ -25,20 +25,6 @@ namespace SeriesMaskTests {
         ) << "Expect " << "simple SeriesMask match";
     }
 
-    TEST(SeriesMask, to_time_series) {
-        EXPECT_PRED2(
-                Series::equal,
-                Series(),
-                polars::SeriesMask().to_series()
-        ) << "Expect " << "empty SeriesMask' match";
-
-        EXPECT_PRED2(
-                Series::equal,
-                Series({0, 1}, {1, 2}),
-                polars::SeriesMask({0, 1}, {1, 2}).to_series()
-        ) << "Expect " << "simple SeriesMask match";
-    }
-
     TEST(SeriesMask, operator__or) {
         EXPECT_PRED2(
                 polars::SeriesMask::equal,

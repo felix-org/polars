@@ -36,14 +36,20 @@ namespace polars {
 
         TimeSeries(arma::vec v0, std::vector<TimePointType> t0) : Series(v0, chrono_to_double_vector(t0)) {};
 
-        std::vector<TimePointType> timestamps() const {
-            // Pass indices and return vector of timepoints
-            return double_to_chrono_vector(index());
-        };
+        static TimeSeries from_map(const std::map<TimePointType, double> &iv_map) {
+            arma::vec index(iv_map.size());
+            arma::vec values(iv_map.size());
+            int i = 0;
+            for (auto& pair : iv_map) {
+                index[i] = chrono_to_double(pair.first);
+                values[i] = pair.second;
+                ++i;
+            }
+            return {values, index};
+        }
 
         // TODO: Rename to_map once we sort out base methods, etc.
         std::map<TimePointType, double> to_timeseries_map() const {
-
             std::map<TimePointType, double> m;
 
             std::vector<TimePointType> timepoints = double_to_chrono_vector(index());
@@ -58,41 +64,28 @@ namespace polars {
 
         // TODO:: Make this more efficient.
         TimeSeries loc(const std::vector<TimePointType> &index_labels) const {
-            std::vector<double> indices;
-
-            // Turn time_points to doubles
-            auto tstamps = chrono_to_double_vector(index_labels);
-
-            for (int j = 0; j < tstamps.n_elem; j++) {
-
-                arma::uvec idx = arma::find(index() == tstamps[j]);
-
-                if (!idx.empty()) {
-                    indices.push_back(idx[0]);
-                }
-            }
-
-            if (indices.empty()) {
-                return {};
-            } else {
-                arma::uvec indices_v = arma::conv_to<arma::uvec>::from(indices);
-                return {values().elem(indices_v), double_to_chrono_vector(index().elem(indices_v))};
-            }
+            return Series::loc(chrono_to_double_vector(index_labels));
         };
 
         TimeSeries head(int n) const  {
-            Series ser(values(), index());
-            Series ser_head = ser.head(n);
+            Series ser_head = Series::head(n);
             return {ser_head.values(), double_to_chrono_vector(ser_head.index())};
         };
 
         TimeSeries tail(int n) const  {
-            Series ser(values(), index());
-            Series ser_tail = ser.tail(n);
+            Series ser_tail = Series::tail(n);
             return {ser_tail.values(), double_to_chrono_vector(ser_tail.index())};
         };
 
+        std::vector<TimePointType> timestamps() const {
+            // Pass indices and return vector of timepoints
+            return double_to_chrono_vector(index());
+        };
+
     private:
+        TimeSeries(arma::vec v0, arma::vec t0) : Series(v0, t0) {};
+        TimeSeries(const Series& ser) : Series(ser) {};
+
         static double chrono_to_double(TimePointType timepoint){
             return time_point_cast<typename TimePointType::duration>(timepoint).time_since_epoch().count();
         };

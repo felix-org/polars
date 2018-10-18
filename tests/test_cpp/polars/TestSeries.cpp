@@ -12,6 +12,14 @@
 
 namespace SeriesTests {
     using Series = polars::Series;
+
+    TEST(Series, from_map) {
+        EXPECT_PRED2(Series::equal, Series::from_map({}), Series());
+
+        EXPECT_PRED2(Series::equal, Series::from_map({{1, 3}, {2, 4}}), Series({3, 4}, {1, 2}));
+
+    }
+
     TEST(Series, equal) {
         EXPECT_PRED2(Series::equal, Series(), Series()) << "Expect " << "empty Series' match";
 
