@@ -93,6 +93,15 @@ TEST(TimeSeries, from_map) {
             ts
     );
 
+    using MSTP = time_point<system_clock, milliseconds>;
+
+    auto ms_ts = MillisecondsTimeSeries({3, 4}, {MSTP(1min), MSTP(2min)});
+    EXPECT_PRED2(
+            MillisecondsTimeSeries::equal,
+            MillisecondsTimeSeries::from_map(ms_ts.to_timeseries_map()),
+            ms_ts
+    );
+
 
 
 }
