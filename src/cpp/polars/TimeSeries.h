@@ -58,6 +58,11 @@ namespace polars {
             return {values, index};
         }
 
+        /**
+         * enable explicit conversion from a Series to a TimeSeries when you *know* the value match
+         */
+        static TimeSeries from_series(const Series& ser) {return ser;};
+
         // TODO: Rename to_map once we sort out base methods, etc.
         std::map<TimePointType, double> to_timeseries_map() const {
             std::map<TimePointType, double> m;
