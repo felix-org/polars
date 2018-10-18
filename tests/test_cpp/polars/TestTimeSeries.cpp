@@ -86,6 +86,20 @@ TEST(TimeSeries, from_map) {
 
 }
 
+TEST(TimeSeries, from_series) {
+    using TP = time_point<system_clock, seconds>;
+
+    EXPECT_PRED2(SecondsTimeSeries::equal, SecondsTimeSeries::from_series({}), SecondsTimeSeries());
+
+    auto ts = SecondsTimeSeries({3, 4}, {TP(1s), TP(2s)});
+    EXPECT_PRED2(SecondsTimeSeries::equal, SecondsTimeSeries::from_series(Series(ts)), ts)
+                        << "Expect perfect round trip conversions when comparing as TimeSeries";
+
+    auto s = Series({3, 4}, {1, 2});
+    EXPECT_PRED2(Series::equal, Series(SecondsTimeSeries::from_series(s)), s)
+                        << "Expect perfect round trip conversions when comparing as Series";
+}
+
 TEST(TimeSeries, get_timestamps) {
 
     using TimePoint = time_point<system_clock, seconds>;
