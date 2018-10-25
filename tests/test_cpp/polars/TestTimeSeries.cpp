@@ -283,7 +283,7 @@ TEST(TimeSeries, prettyprint) {
     out << ts;
 
     EXPECT_EQ(out.str(),
-              "Timeseries: \nTimestamp:\n2018 May 10 17:00:00 Value:\n1Timestamp:\n2018 May 10 17:03:00 Value:\n2");
+              "Timeseries:\nTimestamp:\t2018 May 10 17:00:00\tValue:\t1\nTimestamp:\t2018 May 10 17:03:00\tValue:\t2\n");
 
 }
 
@@ -343,7 +343,7 @@ TEST(TimeSeries, left_shift_operator_test) {
     ss << ts;
     ASSERT_EQ(
             ss.str(),
-            "Timeseries: \nTimestamp:\n2018 May 10 17:00:00 Value:\n1Timestamp:\n2018 May 10 17:03:00 Value:\n2Timestamp:\n2018 May 10 17:06:00 Value:\n3"
+            "Timeseries:\nTimestamp:\t2018 May 10 17:00:00\tValue:\t1\nTimestamp:\t2018 May 10 17:03:00\tValue:\t2\nTimestamp:\t2018 May 10 17:06:00\tValue:\t3\n"
     );
 }
 } // namespace TimeSeriesTests

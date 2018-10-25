@@ -34,7 +34,19 @@ namespace polars {
 
         TimeSeriesMask() = default;
 
-        TimeSeriesMask(arma::uvec v0, std::vector<TimePointType> t0) : SeriesMask(v0, chrono_to_double_vector(t0)) {};
+        TimeSeriesMask(arma::uvec v0, std::vector<TimePointType> t0) : SeriesMask(v0 > 0, chrono_to_double_vector(t0)) {};
+
+        static TimeSeriesMask from_map(const std::map<TimePointType, bool> &iv_map) {
+            arma::vec index(iv_map.size());
+            arma::uvec values(iv_map.size());
+            int i = 0;
+            for (auto& pair : iv_map) {
+                index[i] = chrono_to_double(pair.first);
+                values[i] = pair.second;
+                ++i;
+            }
+            return {values, index};
+        }
 
         /**
          * enable explicit conversion from a SeriesMask to a TimeSeriesMask when you *know* the value match
@@ -96,7 +108,9 @@ namespace polars {
         };
 
     private:
+        TimeSeriesMask(arma::uvec v0, arma::vec t0) : SeriesMask(v0, t0) {};
         TimeSeriesMask(const SeriesMask& mask) : SeriesMask(mask) {};
+
         static double chrono_to_double(TimePointType timepoint){
             return time_point_cast<typename TimePointType::duration>(timepoint).time_since_epoch().count();
         };
@@ -112,7 +126,7 @@ namespace polars {
 
 
         static TimePointType double_to_chrono(double timestamp){
-            return TimePointType{duration_cast<typename TimePointType::duration>(unix_epoch_seconds(timestamp))};
+            return TimePointType{typename TimePointType::duration(std::lround(timestamp))};
         };
 
         static std::vector<TimePointType> double_to_chrono_vector(const arma::vec& tstamps){
@@ -146,11 +160,11 @@ std::ostream &operator<<(std::ostream &os, const polars::TimeSeriesMask<TimePoin
     std::vector<TimePointType> timestamps = ts.timestamps();
     arma::uvec vals = ts.values();
 
-    os << "TimeSeriesMask: \n";
+    os << "TimeSeriesMask:\n";
 
     for (auto& pair : ts.head(5).to_timeseries_map()) {
         time_t elem = std::chrono::system_clock::to_time_t(pair.first);
-        os << "Timestamp:\n" << std::put_time(std::gmtime(&elem), "%Y %b %d %H:%M:%S") << " Value:\n" << pair.second;
+        os << "Timestamp:\t" << std::put_time(std::gmtime(&elem), "%Y %b %d %H:%M:%S") << "\tValue:\t" << pair.second << "\n";
     }
 
     if(ts.size() > 5){
@@ -158,7 +172,7 @@ std::ostream &operator<<(std::ostream &os, const polars::TimeSeriesMask<TimePoin
 
         for (auto& pair : ts.tail(5).to_timeseries_map()) {
             time_t elem = std::chrono::system_clock::to_time_t(pair.first);
-            os << "Timestamp:\n" << std::put_time(std::gmtime(&elem), "%Y %b %d %H:%M:%S") << " Value:\n" << pair.second;
+            os << "Timestamp:\t" << std::put_time(std::gmtime(&elem), "%Y %b %d %H:%M:%S") << "\tValue:\t" << pair.second << "\n";
         }
     }
 
