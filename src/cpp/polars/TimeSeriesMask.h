@@ -34,7 +34,7 @@ namespace polars {
 
         TimeSeriesMask() = default;
 
-        TimeSeriesMask(arma::uvec v0, std::vector<TimePointType> t0) : SeriesMask(v0, chrono_to_double_vector(t0)) {};
+        TimeSeriesMask(arma::uvec v0, std::vector<TimePointType> t0) : SeriesMask(v0 > 0, chrono_to_double_vector(t0)) {};
 
         static TimeSeriesMask from_map(const std::map<TimePointType, bool> &iv_map) {
             arma::vec index(iv_map.size());
@@ -160,7 +160,7 @@ std::ostream &operator<<(std::ostream &os, const polars::TimeSeriesMask<TimePoin
     std::vector<TimePointType> timestamps = ts.timestamps();
     arma::uvec vals = ts.values();
 
-    os << "TimeSeriesMask: \n";
+    os << "TimeSeriesMask:\n";
 
     for (auto& pair : ts.head(5).to_timeseries_map()) {
         time_t elem = std::chrono::system_clock::to_time_t(pair.first);
