@@ -13,6 +13,7 @@
 
 
 using namespace std::chrono;
+using namespace polars;
 
 TEST(TimeSeriesMask, constructor) {
 
@@ -46,6 +47,20 @@ TEST(TimeSeriesMask, constructor) {
             ts.index(),
             arma::vec({1525971600000, 1525971780000}) // in milliseconds
     ) << "Expect " << " timestamps in milliseconds";
+}
+
+TEST(TimeSeriesMask, from_series_mask) {
+    using TP = time_point<system_clock, seconds>;
+
+    EXPECT_PRED2(SecondsTimeSeriesMask::equal, SecondsTimeSeriesMask::from_series_mask({}), SecondsTimeSeriesMask());
+
+    auto ts = SecondsTimeSeriesMask({3, 4}, {TP(1s), TP(2s)});
+    EXPECT_PRED2(SecondsTimeSeriesMask::equal, SecondsTimeSeriesMask::from_series_mask(SeriesMask(ts)), ts)
+                        << "Expect perfect round trip conversions when comparing as TimeSeriesMask";
+
+    auto s = SeriesMask({3, 4}, {1, 2});
+    EXPECT_PRED2(SeriesMask::equal, SeriesMask(SecondsTimeSeriesMask::from_series_mask(s)), s)
+                        << "Expect perfect round trip conversions when comparing as SeriesMask";
 }
 
 TEST(TimeSeriesMask, get_timestamps) {
