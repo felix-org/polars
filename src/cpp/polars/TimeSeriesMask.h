@@ -36,6 +36,11 @@ namespace polars {
 
         TimeSeriesMask(arma::uvec v0, std::vector<TimePointType> t0) : SeriesMask(v0, chrono_to_double_vector(t0)) {};
 
+        /**
+         * enable explicit conversion from a SeriesMask to a TimeSeriesMask when you *know* the value match
+         */
+        static TimeSeriesMask from_series_mask(const SeriesMask& mask) {return mask;};
+
         std::vector<TimePointType> timestamps() const {
             // Pass indices and return vector of timepoints
             return double_to_chrono_vector(index());
@@ -91,6 +96,7 @@ namespace polars {
         };
 
     private:
+        TimeSeriesMask(const SeriesMask& mask) : SeriesMask(mask) {};
         static double chrono_to_double(TimePointType timepoint){
             return time_point_cast<typename TimePointType::duration>(timepoint).time_since_epoch().count();
         };
