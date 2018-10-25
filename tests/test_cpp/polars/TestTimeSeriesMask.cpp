@@ -49,6 +49,40 @@ TEST(TimeSeriesMask, constructor) {
     ) << "Expect " << " timestamps in milliseconds";
 }
 
+TEST(TimeSeriesMask, from_map) {
+    using TP = time_point<system_clock, seconds>;
+
+    EXPECT_PRED2(SecondsTimeSeriesMask::equal, SecondsTimeSeriesMask::from_map({}), SecondsTimeSeriesMask());
+
+    EXPECT_PRED2(
+            SecondsTimeSeriesMask::equal,
+            SecondsTimeSeriesMask::from_map({{TP(1s), 3},
+                                         {TP(2s), 4}}),
+            SecondsTimeSeriesMask({3, 4}, {TP(1s), TP(2s)})
+    );
+
+    using MTP = time_point<system_clock, minutes>;
+
+    auto ts = MinutesTimeSeriesMask({3, 4}, {MTP(1min), MTP(2min)});
+    EXPECT_PRED2(
+            MinutesTimeSeriesMask::equal,
+            MinutesTimeSeriesMask::from_map(ts.to_timeseries_map()),
+            ts
+    );
+
+    using MSTP = time_point<system_clock, milliseconds>;
+
+    auto ms_ts = MillisecondsTimeSeriesMask({3, 4}, {MSTP(1min), MSTP(2min)});
+    EXPECT_PRED2(
+            MillisecondsTimeSeriesMask::equal,
+            MillisecondsTimeSeriesMask::from_map(ms_ts.to_timeseries_map()),
+            ms_ts
+    );
+
+
+
+}
+
 TEST(TimeSeriesMask, from_series_mask) {
     using TP = time_point<system_clock, seconds>;
 
