@@ -220,7 +220,7 @@ TEST(TimeSeriesMask, prettyprint) {
     out << ts;
 
     EXPECT_EQ(out.str(),
-              "TimeSeriesMask: \nTimestamp:\n2018 May 10 17:00:00 Value:\n1Timestamp:\n2018 May 10 17:03:00 Value:\n0");
+              "TimeSeriesMask:\nTimestamp:\t2018 May 10 17:00:00\tValue:\t1\nTimestamp:\t2018 May 10 17:03:00\tValue:\t0\n");
 
 }
 
@@ -280,6 +280,6 @@ TEST(TimeSeriesMask, left_shift_operator_test) {
     ss << ts;
     ASSERT_EQ(
             ss.str(),
-            "TimeSeriesMask: \nTimestamp:\n2018 May 10 17:00:00 Value:\n1Timestamp:\n2018 May 10 17:03:00 Value:\n0Timestamp:\n2018 May 10 17:06:00 Value:\n1"
+            "TimeSeriesMask:\nTimestamp:\t2018 May 10 17:00:00\tValue:\t1\nTimestamp:\t2018 May 10 17:03:00\tValue:\t0\nTimestamp:\t2018 May 10 17:06:00\tValue:\t1\n"
     );
 }

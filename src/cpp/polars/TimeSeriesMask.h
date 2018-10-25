@@ -164,7 +164,7 @@ std::ostream &operator<<(std::ostream &os, const polars::TimeSeriesMask<TimePoin
 
     for (auto& pair : ts.head(5).to_timeseries_map()) {
         time_t elem = std::chrono::system_clock::to_time_t(pair.first);
-        os << "Timestamp:\n" << std::put_time(std::gmtime(&elem), "%Y %b %d %H:%M:%S") << " Value:\n" << pair.second;
+        os << "Timestamp:\t" << std::put_time(std::gmtime(&elem), "%Y %b %d %H:%M:%S") << "\tValue:\t" << pair.second << "\n";
     }
 
     if(ts.size() > 5){
@@ -172,7 +172,7 @@ std::ostream &operator<<(std::ostream &os, const polars::TimeSeriesMask<TimePoin
 
         for (auto& pair : ts.tail(5).to_timeseries_map()) {
             time_t elem = std::chrono::system_clock::to_time_t(pair.first);
-            os << "Timestamp:\n" << std::put_time(std::gmtime(&elem), "%Y %b %d %H:%M:%S") << " Value:\n" << pair.second;
+            os << "Timestamp:\t" << std::put_time(std::gmtime(&elem), "%Y %b %d %H:%M:%S") << "\tValue:\t" << pair.second << "\n";
         }
     }
 
