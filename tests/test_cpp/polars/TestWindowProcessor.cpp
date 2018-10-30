@@ -213,6 +213,32 @@ namespace WindowProcessorTests {
         ) << "Expect " << "with window=3, min_periods=2 the edge values should be NAN and the rest should sum the windows";
     }
 
+    TEST(Series, rolling_mean_normal) {
+        EXPECT_PRED2(
+                Series::equal,
+                Series().rolling(5, polars::Mean(), 1),
+                Series()
+        )  << "Expect " << "empty Series returns empty Series";
+
+        EXPECT_PRED2(
+                Series::equal,
+                Series({1,2,3,4,3,2,1}, {1,2,3,4,5,6,7}).rolling(5, polars::Mean(), 1),
+                Series({2, 2.5, 2.6, 2.8, 2.6, 2.5, 2}, {1,2,3,4,5,6,7})
+        )  << "Expect " << "empty Series returns empty Series";
+
+        EXPECT_PRED2(
+                Series::equal,
+                Series({NAN,2,3,NAN,3,NAN,1}, {1,2,3,4,5,6,7}).rolling(13, polars::Mean(), 1),
+                Series({2.25, 2.25, 2.25, 2.25, 2.25, 2.25, 2.25}, {1,2,3,4,5,6,7})
+        ) << "Expect the mean of a series with NAN in results in the mean of the non-nans when the window much bigger than the series";
+
+        EXPECT_PRED2(
+                Series::equal,
+                Series({NAN,2,3,NAN,3,NAN,1}, {1,2,3,4,5,6,7}).rolling(5, polars::Mean(), 1),
+                Series({2.5, 2.5, 2.6666666666666665, 2.6666666666666665, 2.3333333333333335, 2, 2}, {1,2,3,4,5,6,7})
+        ) << "Expect with small windows the mean ignored NANs";
+    }
+
     TEST(Series, rolling_mean_triangle) {
         EXPECT_PRED2(
                 Series::equal,
