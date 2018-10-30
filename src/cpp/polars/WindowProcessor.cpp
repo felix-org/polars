@@ -61,9 +61,10 @@ namespace polars {
 
 
     double polars::Mean::processWindow(const Series &window, const arma::vec& weights) const {
-        // This method doesn't support exponential window so results will be faulty. Please use ExpMean instead.
+        // This ensures deals with NAs like pandas for the case ignore_na = False which is the default setting.
+        arma::vec weights_for_sum = weights.elem(arma::find_finite(window.values()));
         arma::vec weighted_values = window.values() % weights;
-        return polars::numc::sum_finite(weighted_values) / arma::sum(weights);
+        return polars::numc::sum_finite(weighted_values) / arma::sum(weights_for_sum);
     }
 
 
