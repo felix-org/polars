@@ -9,8 +9,7 @@ option(WITH_TESTS "Build polars_cpp_test target" ON)
 
 if(WITH_SUBMODULE_DEPENDENCIES)
   # Dependencies
-  set(DEPENDENCIES_DIR "dependencies")
-  include(${DEPENDENCIES_DIR}/CMakeLists.txt)
+  include(dependencies/CMakeLists.txt)
 endif()
 
 # Include other CMakeLists.txt

@@ -1,3 +1,3 @@
 
-add_subdirectory(${DEPENDENCIES_DIR}/date)
-add_subdirectory(${DEPENDENCIES_DIR}/armadillo-code)
+add_subdirectory(dependencies/date)
+add_subdirectory(dependencies/armadillo-code)
