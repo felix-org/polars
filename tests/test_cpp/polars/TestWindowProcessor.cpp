@@ -224,7 +224,7 @@ namespace WindowProcessorTests {
                 Series::equal,
                 Series({1,2,3,4,3,2,1}, {1,2,3,4,5,6,7}).rolling(5, polars::Mean(), 1),
                 Series({2, 2.5, 2.6, 2.8, 2.6, 2.5, 2}, {1,2,3,4,5,6,7})
-        )  << "Expect " << "empty Series returns empty Series";
+        )  << "Expect " << "series containing means when window is smaller than series";
 
         EXPECT_PRED2(
                 Series::equal,
