@@ -4,9 +4,17 @@ project(Polars C CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
-# Dependencies
-set(DEPENDENCIES_DIR "dependencies")
+option(WITH_SUBMODULE_DEPENDENCIES "Use submodules for dependencies" ON)
+option(WITH_TESTS "Build polars_cpp_test target" ON)
+
+if(WITH_SUBMODULE_DEPENDENCIES)
+  # Dependencies
+  include(dependencies/CMakeLists.txt)
+endif()
 
 # Include other CMakeLists.txt
 include(src/cpp/polars/CMakeLists.txt)
-include(tests/test_cpp/polars/CMakeLists.txt)
+
+if(WITH_TESTS)
+  include(tests/test_cpp/polars/CMakeLists.txt)
+endif()

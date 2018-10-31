@@ -1,2 +1,2 @@
 #!/bin/bash
-build/cmake-makefile-debug/cpp_test
+build/cmake-makefile-debug/polars_cpp_test

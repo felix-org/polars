@@ -1,6 +1,3 @@
-# add dependencies
-add_subdirectory(${DEPENDENCIES_DIR}/date)
-add_subdirectory(${DEPENDENCIES_DIR}/armadillo-code)
 
 # Set source directory
 set(CPP_SOURCE_DIR "src/cpp/polars")
