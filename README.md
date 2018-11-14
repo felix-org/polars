@@ -29,6 +29,19 @@ The file that changed is actually built by cmake so the changes can be readily i
 
 To install - WIP (need to add the install() command to the CMakeLists.txt)
 
+
+### Building with Conan
+
+```
+cd conan
+conan create . user/channel -s cppstd=14
+```
+
+Building with Conan requires:
+* `Armadillo/9.200.1@felix/stable` ([repo](https://github.com/felix-org/conan-armadillo))
+* `Date/2.4.1@felix/stable` ([repo](https://github.com/felix-org/conan-date))
+
+
 ## What is polars?
 
 Polars was built to make cross platform mobile deployment easy - prototype in python, port quickly into C++, wrap into a library and deploy into ios and android.

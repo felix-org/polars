@@ -17,6 +17,17 @@ set(
         "${CPP_SOURCE_DIR}/WindowProcessor.h"
 )
 
+if(BUILD_WITH_CONAN)
+  include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+  conan_basic_setup(TARGETS)
+
+  set(polars_dep_armadillo CONAN_PKG::Armadillo)
+  set(polars_dep_date CONAN_PKG::Date)
+else()
+  set(polars_dep_armadillo armadillo)
+  set(polars_dep_date date_interface)
+endif()
+
 add_library(polars_cpp ${CPP_SOURCES})
 target_include_directories(polars_cpp PUBLIC ${Polars_SOURCE_DIR}/src/cpp)
-target_link_libraries(polars_cpp armadillo date_interface)
+target_link_libraries(polars_cpp ${polars_dep_armadillo} ${polars_dep_date})
