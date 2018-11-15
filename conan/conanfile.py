@@ -23,7 +23,6 @@ class PolarsConan(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.definitions["WITH_TESTS"] = "OFF"
-        cmake.definitions["WITH_SUBMODULE_DEPENDENCIES"] = "OFF"
         cmake.definitions["BUILD_WITH_CONAN"] = "ON"
         cmake.configure()
         cmake.build()
