@@ -34,8 +34,11 @@ To install - WIP (need to add the install() command to the CMakeLists.txt)
 
 ```
 cd conan
-conan create . user/channel -s cppstd=14
+conan create . felix/stable -s cppstd=14
 ```
+...where `felix` refers to the name of the user / company creating the package, and
+`stable` refers to the channel (or distribution scope) of the library.
+
 
 Building with Conan requires:
 * `Armadillo/9.200.1@felix/stable` ([repo](https://github.com/felix-org/conan-armadillo))
