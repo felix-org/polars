@@ -34,10 +34,9 @@ To install - WIP (need to add the install() command to the CMakeLists.txt)
 
 ```
 cd conan
-conan create . felix/stable -s cppstd=14
+conan create . felix/master -s cppstd=14
 ```
-...where `felix` refers to the name of the user / company creating the package, and
-`stable` refers to the channel (or distribution scope) of the library.
+...where `felix/master` refers to an official release that comes from a merge-commit on the master branch. Any other builds should be under `username/dev`
 
 
 Building with Conan requires:
