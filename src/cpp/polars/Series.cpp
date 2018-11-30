@@ -174,9 +174,36 @@ namespace polars {
 
 // Location.
 
-// by  position of the indices
+    Series Series::iloc(int from, int to, int step) const {
 
-    // TODO: Add slicing logic of the form .iloc(int start, int stop, int step=1) so it can be called like ser.iloc(0, -10).
+        if(empty()){
+            return Series();
+        }
+
+        arma::uvec pos;
+        int effective_from;
+        int effective_to;
+
+        if((from < 0) && (to > 0)){
+            effective_from =  values().size() + from;
+            effective_to = to - 1;
+        }
+        else if(from < 0 && to < 0){
+            effective_from = values().size() + from;
+            effective_to = values().size() + to - 1;
+        }
+        else {
+            effective_from = from;
+            effective_to = to - 1;
+        }
+
+        pos = arma::regspace<arma::uvec>(effective_from,  step,  effective_to);
+
+
+        return Series(values().elem(pos),index().elem(pos));
+    }
+
+
     Series Series::iloc(const arma::uvec &pos) const {
         return Series(values().elem(pos), index().elem(pos));
     }

@@ -71,6 +71,8 @@ namespace polars {
 
         double iloc(arma::uword pos) const;
 
+        Series iloc(int from, int to, int step = 1) const;
+
         Series loc(const arma::vec &index_labels) const;
 
         Series loc(arma::uword) const;

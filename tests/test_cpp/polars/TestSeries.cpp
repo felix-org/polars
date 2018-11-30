@@ -484,6 +484,54 @@ TEST(Series, iloc) {
             3
     ) << "Expect " << " element 3 to be retrieved";
 
+    EXPECT_PRED2(
+                Series::equal,
+                Series(),
+                Series().iloc(1,3)
+    );
+
+    EXPECT_PRED2(
+                Series::equal,
+                Series({8,9,10,11,12}, {8,9,10,11,12}),
+                Series({7,8,9,10,11,12}, {7,8,9,10,11,12}).iloc(1, 6)
+    );
+
+    EXPECT_PRED2(
+                Series::equal,
+                Series({10,11}, {10,11}),
+                Series({7,8,9,10,11,12}, {7,8,9,10,11,12}).iloc(-3, 5)
+    );
+
+    EXPECT_PRED2(
+                Series::equal,
+                Series({0,1,2,3}, {0,1,2,3}),
+                Series({0,1,2,3}, {0,1,2,3}).iloc(0, 4)
+    );
+
+    EXPECT_PRED2(
+                Series::equal,
+                Series({12}, {12}),
+                Series({7,8,9,10,11,12}, {7,8,9,10,11,12}).iloc(-1, 6)
+    );
+
+    EXPECT_PRED2(
+                Series::equal,
+                Series({10,11,12}, {10,11,12}),
+                Series({7,8,9,10,11,12}, {7,8,9,10,11,12}).iloc(-3, 6)
+    );
+
+    EXPECT_PRED2(
+                Series::equal,
+                Series({0,1,2,3}, {0,1,2,3}),
+                Series({0,1,2,3,4,5,6,7}, {0,1,2,3,4,5,6,7}).iloc(0,4)
+    );
+
+    EXPECT_PRED2(
+                Series::equal,
+                Series({0, 2}, {0, 2}),
+                Series({0,1,2,3,4,5,6,7}, {0,1,2,3,4,5,6,7}).iloc(0,4,2)
+    );
+
 }
 
 TEST(Series, loc) {
