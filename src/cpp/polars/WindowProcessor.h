@@ -138,7 +138,10 @@ namespace polars {
         Series sum();
         Series mean();
         Series std();
-        Series quantile(int q);
+        Series quantile(double q);
+        Series min();
+        Series max();
+        Series median();
     private:
         const Series& ts_;
         arma::uword windowSize_;
