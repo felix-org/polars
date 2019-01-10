@@ -100,8 +100,20 @@ namespace polars {
         return ts_.rolling(windowSize_, Std(), minPeriods_, center_, symmetric_);
     }
 
-    Series Rolling::quantile(int q) {
+    Series Rolling::quantile(double q) {
         return ts_.rolling(windowSize_, Quantile(q), minPeriods_, center_, symmetric_);
+    }
+
+    Series Rolling::min() {
+        return ts_.rolling(windowSize_, Quantile(0.), minPeriods_, center_, symmetric_);
+    }
+
+    Series Rolling::max() {
+        return ts_.rolling(windowSize_, Quantile(1.), minPeriods_, center_, symmetric_);
+    }
+
+    Series Rolling::median() {
+        return ts_.rolling(windowSize_, Quantile(0.5), minPeriods_, center_, symmetric_);
     }
 
     Series Window::mean() {
