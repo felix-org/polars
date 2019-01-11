@@ -69,7 +69,7 @@ namespace polars {
         arma::ivec rhs_vec = arma::ones<arma::ivec>(this->size()) * (int)rhs;
         arma::ivec abs_diff = arma::abs(values() - rhs_vec);
         // We can't use a large difference test like .1 despite the rhs is an int since the lhs is double so could be close.
-        return {abs_diff != 0, index()};
+        return {abs_diff == 0, index()};
     }
 
 
@@ -77,7 +77,7 @@ namespace polars {
         arma::ivec rhs_vec = arma::ones<arma::ivec>(this->size()) * (int)rhs;
         arma::ivec abs_diff = arma::abs(values() - rhs_vec);
         // We can't use a large difference test like .1 despite the rhs is an int since the lhs is double so could be close.
-        return {abs_diff == 0, index()};
+        return {abs_diff != 0, index()};
     }
 
 

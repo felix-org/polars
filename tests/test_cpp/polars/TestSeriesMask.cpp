@@ -77,12 +77,12 @@ namespace SeriesMaskTests {
       EXPECT_PRED2(polars::SeriesMask::equal,
                    polars::SeriesMask({1,0,1},{1,2,3}),
                    polars::SeriesMask({0,1,0},{1,2,3})  == 0
-      ) << "Expect this to fail";
+      ) <<  "Expect " << "logical ==";
 
       EXPECT_PRED2(polars::SeriesMask::equal,
                    polars::SeriesMask({0,1,0},{1,2,3}),
                    polars::SeriesMask({0,1,0},{1,2,3})  != 0
-      ) << "Expect this to fail";
+      ) << "Expect " << "logical !=";
     }
 
 }  // SeriesMaskTests
