@@ -623,4 +623,47 @@ TEST(Series, tail) {
     );
 }
 
+TEST(Series, rolling_window_size_correction){
+
+    arma::vec input_values = {0.1, 0.3, 0.5, 0.4, 0.7, 0.9, 0.3, 0.1};
+    arma::vec input_timestamps = {1, 2, 3, 4, 5, 6, 7, 8};
+
+    Series new_input_series = _window_size_correction(10, false, Series(input_values, input_timestamps));
+
+    EXPECT_PRED2(
+        Series::equal,
+        new_input_series,
+        Series({NAN, NAN, NAN, NAN, 0.1, 0.3, 0.5, 0.4, 0.7, 0.9, 0.3, 0.1},
+               {-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8})
+    ) << "Expect" << " additional 4 NANs at the beginning for window size even";
+
+    new_input_series = _window_size_correction(11, false, Series(input_values, input_timestamps));
+
+    EXPECT_PRED2(
+        Series::equal,
+        new_input_series,
+        Series({NAN, NAN, NAN, NAN, 0.1, 0.3, 0.5, 0.4, 0.7, 0.9, 0.3, 0.1},
+               {-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8})
+    ) << "Expect" << " additional 4 NANs at the beginning for window size odd";
+
+    input_timestamps = {0, 3, 6, 9, 12, 15, 18, 21};
+
+    new_input_series = _window_size_correction(10, false, Series(input_values, input_timestamps));
+
+    EXPECT_PRED2(
+        Series::equal,
+        new_input_series,
+        Series({NAN, NAN, NAN, NAN, 0.1, 0.3, 0.5, 0.4, 0.7, 0.9, 0.3, 0.1},
+               {-12, -9, -6, -3, 0, 3, 6, 9, 12, 15, 18, 21})
+    ) << "Expect" << " additional 4 NANs at the beginning for window size odd";
+}
+
+TEST(Series, rolling_exp_input_correction){
+
+    EXPECT_PRED2(Series::equal, Series(), _ewm_input_correction({})) << "Expect" << " empty input series to return empty series";
+    EXPECT_PRED2(Series::equal, Series({NAN, NAN, NAN, 5, 6, 7}, {-2, -1, 0, 1, 2, 3}), _ewm_input_correction({{5, 6, 7}, {1, 2, 3}}));
+    EXPECT_PRED2(Series::equal, Series({NAN, NAN, NAN, NAN, 5, 6, 7, 8}, {-3, -2, -1, 0, 1, 2, 3, 4}), _ewm_input_correction({{5, 6, 7, 8}, {1, 2, 3, 4}}));
+
+}
+
 } // namespace SeriesTests

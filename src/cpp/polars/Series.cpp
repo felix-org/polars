@@ -283,7 +283,7 @@ namespace polars {
         }
     }
 
-
+    // TODO: This method needs to be re-factored.
     arma::vec _ewm_correction(const arma::vec &results, const arma::vec &vals,
                                       polars::WindowProcessor::WindowType win_type) {
         /* Method that shifts result from rolling average with exp window so it yields correct normalisation and allows usage
@@ -296,12 +296,30 @@ namespace polars {
 
         if (win_type == polars::WindowProcessor::WindowType::expn) {
             // Correction to match pandas ewm - shift by one.
+            arma::vec eff_results = results;
             arma::vec results_ewm;
-            results_ewm.copy_size(results);
+
+            // For the cases in which window_size < size we need to correct
+            if(results.size() != vals.size()){
+                eff_results = eff_results.elem( arma::find_finite(eff_results) );
+                eff_results = eff_results.head(vals.size());
+            }
+
+            if(!eff_results.is_finite()){
+                results_ewm = eff_results.elem( arma::find_finite(eff_results) );
+                return results_ewm;
+            }
+
+            if (eff_results.at(0) == vals[0]) {
+                // difference of 1 for center = False.
+                return eff_results;
+            }
+
+            results_ewm.copy_size(eff_results) ;
             results_ewm.at(0) = vals[0];
 
             for (int j = 1; j < results_ewm.n_elem; j++) {
-                results_ewm[j] = results[j - 1];
+                results_ewm[j] = eff_results[j - 1];
             }
 
             return results_ewm;
@@ -309,6 +327,90 @@ namespace polars {
         } else {
             return results;
         }
+    }
+
+    // TODO: This method needs to be re-factored.
+    polars::Series _window_size_correction(int window_size, bool center, const polars::Series &input){
+        // assume that this function only gets called when window_size > input.size()
+
+        auto n = window_size / 2;
+
+        if(input.size() % 2 == 0){ n = n - 1; };
+
+        // Prepare timestamps
+        auto ts = input.index();
+
+        auto index_0 = ts.at(0);
+        auto index_1 = ts.at(1);
+
+        double delta = std::ceil(std::abs(index_1 -  index_0));
+
+        double new_index_0;
+        arma::vec new_timestamps;
+
+        arma::vec v(n);
+        v.fill(NAN);
+
+        arma::vec single_nan(1);
+        single_nan.fill(NAN);
+
+        arma::vec new_input;
+
+        if( (center == false) && (window_size > input.size() + 1) ) {
+            new_input = arma::join_cols(v, input.values());
+
+            // padding goes on the left
+            new_index_0 = index_0 - n * delta;
+            new_timestamps = arma::linspace(new_index_0, ts.at(ts.size()-1), (n + input.size()));
+
+        } else if(center == false &&  n == 1) {
+
+            new_input =arma::join_cols(single_nan, arma::join_cols(single_nan, input.values()));
+
+            // passing goes at the end
+            new_index_0 = index_0 - 2 * delta;
+            new_timestamps = arma::linspace(new_index_0, ts.at(ts.size()-1), 2 + input.size() );
+
+        } else if (center == false && n == 2){
+            new_input = arma::join_cols(single_nan, arma::join_cols(input.values(), single_nan));
+
+            // padding goes on the edges
+            new_index_0 = index_0 - delta;
+            new_timestamps = arma::linspace(new_index_0, ts.at(ts.size()-1) + delta, (n + input.size()));
+        }
+        else {
+            new_input = arma::join_cols(input.values(),  v);
+
+            // padding goes on the right
+            new_index_0 = ts.at(ts.size()-1) + n * delta;
+            new_timestamps = arma::linspace(index_0, new_index_0, (n + input.size()));
+        }
+
+        return Series(new_input, new_timestamps);
+    }
+
+    polars::Series _ewm_input_correction(const polars::Series &input){
+        // only gets called when window_size < input.size() and we have win_type = expn
+
+        if(input.empty()){
+            return input;
+        }
+
+        arma::vec v(input.size());
+        v.fill(NAN);
+        arma::vec new_input = arma::join_cols(v, input.values());
+
+        // Get new timestamps
+
+        auto ts = input.index();
+        auto index_0 = ts.at(0);
+        auto index_1 = ts.at(1);
+        double delta = std::ceil(std::abs(index_1 -  index_0));
+
+        auto new_index_0 = index_0 - input.size() * delta;
+        arma::vec new_timestamps = arma::linspace(new_index_0, ts.at(ts.size()-1), 2*input.size());
+
+        return Series(new_input, new_timestamps);
     }
 
 
@@ -320,18 +422,35 @@ namespace polars {
         //assert(center); // todo; implement center:false
         //assert(windowSize > 0);
         //assert(windowSize % 2 == 0); // TODO: Make symmetric = true work for even windows. See tests for reference.
+        arma::vec input_values = v;
+        arma::vec input_idx = t;
+
+        if(win_type == polars::WindowProcessor::WindowType::expn){
+            Series padded_input = _ewm_input_correction(*this);
+            input_values = padded_input.values();
+            input_idx = padded_input.index();
+
+            // Set window size to be the same as the size of the array
+            windowSize = this->size();
+        } else if((size() > 0 && windowSize > size())) {
+
+            // This deals with issues of alignment that arises with non linear windows.
+            Series padded_input = _window_size_correction(windowSize, center, *this);
+            input_values = padded_input.values();
+            input_idx = padded_input.index();
+        }
 
         if (minPeriods == 0) {
             minPeriods = windowSize;
         }
 
-        arma::uword resultSize = size();
+        arma::uword resultSize = input_values.size();
         arma::vec resultv(resultSize);
 
         arma::uword centerOffset = round(((float) windowSize - 1) / 2.0);
 
         // roll a window [left,right], of up to size windowSize, centered on centerIdx, and hand to processor if there are minPeriods finite values.
-        for (arma::uword centerIdx = 0; centerIdx < size(); centerIdx++) {
+        for (arma::uword centerIdx = 0; centerIdx < input_idx.size(); centerIdx++) {
 
             arma::sword leftIdx = centerIdx - centerOffset;
             arma::sword rightIdx = centerIdx - centerOffset + windowSize - 1;
@@ -351,11 +470,11 @@ namespace polars {
                     leftIdx = leftIdx - left_err;
                 }
 
-                if (rightIdx >= size()) {
-                    arma::sword r_clipped = rightIdx - size();
+                if (rightIdx >= input_idx.size()) {
+                    arma::sword r_clipped = rightIdx - input_idx.size();
 
                     arma::sword left_err = -r_clipped - 1;
-                    arma::sword right_err = rightIdx - (size() - 1);
+                    arma::sword right_err = rightIdx - (input_idx.size() - 1);
 
                     weightLeftIdx = weightLeftIdx - left_err;
                     weightRightIdx = weightRightIdx - right_err;
@@ -372,16 +491,16 @@ namespace polars {
                     weightLeftIdx = weightLeftIdx - left_err;
                     leftIdx = leftIdx - left_err;
                 }
-                if (rightIdx >= size()) {
-                    arma::sword right_err = rightIdx - (size() - 1);
+
+                if (rightIdx >= input_idx.size()) {
+                    arma::sword right_err = rightIdx - (input_idx.size() - 1);
 
                     weightRightIdx = weightRightIdx - right_err;
                     rightIdx = rightIdx - right_err;
                 }
             }
 
-
-            arma::vec values = v.subvec(leftIdx, rightIdx);
+            arma::vec values = input_values.subvec(leftIdx, rightIdx);
 
             // Define weights vector required for specific windows
             arma::vec weights;
@@ -389,7 +508,7 @@ namespace polars {
             weights = polars::calculate_window_weights(win_type, windowSize, alpha).subvec(weightLeftIdx,
                                                                                            weightRightIdx);
 
-            const Series subSeries = Series(values, t.subvec(leftIdx, rightIdx));
+            const Series subSeries = Series(values, input_idx.subvec(leftIdx, rightIdx));
 
             if (subSeries.finiteSize() >= minPeriods) {
                 resultv(centerIdx) = processor.processWindow(subSeries, weights);
@@ -398,8 +517,14 @@ namespace polars {
             }
         }
 
-        return Series(polars::_ewm_correction(resultv, v, win_type), t);
+        Series result = Series(polars::_ewm_correction(resultv, v, win_type), t);
 
+        if(size() > 0 & windowSize > size()){
+            return Series(result.values().head(size()), t);
+        } else {
+            return result;
+        }
+        //return result;
     }
 
     Window Series::rolling(SeriesSize windowSize,
