@@ -330,6 +330,7 @@ namespace polars {
     }
 
     // TODO: This method needs to be re-factored.
+    // TODO: Combine cases here with those in input for exponential case.
     polars::Series _window_size_correction(int window_size, bool center, const polars::Series &input){
         // assume that this function only gets called when window_size > input.size()
 
@@ -367,7 +368,7 @@ namespace polars {
 
             new_input =arma::join_cols(single_nan, arma::join_cols(single_nan, input.values()));
 
-            // passing goes at the end
+            // passing goes on the left x2
             new_index_0 = index_0 - 2 * delta;
             new_timestamps = arma::linspace(new_index_0, ts.at(ts.size()-1), 2 + input.size() );
 
