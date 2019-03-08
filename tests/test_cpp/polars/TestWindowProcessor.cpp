@@ -277,6 +277,12 @@ TEST(Series, rolling_count) {
             Series({2, 3, 2, 1, 0}, {1, 2, 3, 4, 5})
     ) << "Expect " << "with window=3, min_periods=1 and a default of 0, all windows should have a count";
 
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(7, polars::Count(), 1, true, false),
+        Series({4, 5, 6, 6, 5, 4}, {1, 2, 3, 4, 5, 6})
+    ) << "Expect " << "with window of 7 the indices expects smaller and smaller counts along the edges";
+
     // Symmetric = True - Odd array with odd window works (e.g. array of 5 with window of 3)
     EXPECT_PRED2(
             Series::equal,
@@ -287,7 +293,7 @@ TEST(Series, rolling_count) {
     EXPECT_PRED2(
             Series::equal,
             Series({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(7, polars::Count(), 1, true, true),
-            Series({1, 3, 5, 5, 3, 1}, {1, 2, 3, 4, 5, 6})
+            Series({1, 3, 5, 6, 5, 3}, {1, 2, 3, 4, 5, 6})
     ) << "Expect " << "with window of 7 the indices expects smaller and smaller counts along the edges";
 
     // Even array with odd window
@@ -296,6 +302,36 @@ TEST(Series, rolling_count) {
             Series({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(3, polars::Count(), 1, true, true),
             Series({1, 3, 3, 3, 3, 1}, {1, 2, 3, 4, 5, 6})
     ) << "Expect " << "with an even array, weighting still works out.";
+}
+
+
+TEST(Series, rolling_count_alignment){
+
+    EXPECT_PRED2(
+           Series::equal,
+            Series({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(7, polars::Count(), 1, true, false),
+            Series({4, 5, 6, 6,  5, 4}, {1, 2, 3, 4, 5, 6})
+    ) << "Expect " << "symmetric False and center true. This matches pandas.";
+
+    // TODO: Cases below need to be looked at further.
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(7, polars::Count(), 1, false, false),
+        Series({3, 4, 5, 6, 6, 5}, {1, 2, 3, 4, 5, 6})
+    ) << "Expect " << "symmetric False and center False. Window in pandas is completely left aligned.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(7, polars::Count(), 1, false, true),
+        Series({NAN, 2, 4, 6, 6, 4}, {1, 2, 3, 4, 5, 6})
+    ) << "Expect " << "symmetric true and center false. ";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(7, polars::Count(), 1, true, true),
+        Series({1, 3, 5, 6, 5, 3}, {1, 2, 3, 4, 5, 6})
+    ) << "Expect " << "symmetric true and center true. ";
+
 }
 
 TEST(Series, rolling_sum_triangle) {
@@ -401,23 +437,357 @@ TEST(Series, rolling_mean_triangle) {
                                                                   polars::WindowProcessor::WindowType::triang).mean(),
             Series({NAN, 2.125, 2.0, NAN, NAN}, {1, 2, 3, 4, 5})
     ) << "Expect " << "with a window of 3 any windows with 3 non-NAN values should give weighted mean, not NAN";
-
-    EXPECT_PRED2(
-            Series::almost_equal,
-            Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(5, polars::Mean(), 1, true, false,
-                                                       polars::WindowProcessor::WindowType::triang),
-            Series({1.66666667, 2.25, 2.75, 3.33333333}, {1, 2, 3, 4})
-    ) << "Expect " << "no NANs because min periods is 1.";
-
-    EXPECT_PRED2(
-            Series::almost_equal,
-            Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(5, 1, true, false,
-                                                       polars::WindowProcessor::WindowType::triang).mean(),
-            Series({1.66666667, 2.25, 2.75, 3.33333333}, {1, 2, 3, 4})
-    ) << "Expect " << "no NANs because min periods is 1.";
 }
 
+
+TEST(Series, edge_cases_with_NAN){
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({NAN, 2, 3, 4}, {1, 2, 3, 4}).rolling(30, polars::Mean(), 1, true, false,
+                                                   polars::WindowProcessor::WindowType::triang),
+        Series({2.9466666666666668, 2.950617283950617, 2.976470588235294, 3.023529411764706}, {1, 2, 3, 4})
+    ) << "Expect " << " matching due to center being true";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({NAN, 2, 3, 4}, {1, 2, 3, 4}).rolling(30, polars::Mean(), 1, false, false,
+                                                   polars::WindowProcessor::WindowType::triang),
+        Series({NAN, 2.0, 2.2500000000000004, 2.5555555555555554}, {1, 2, 3, 4})
+    ) << "Expect " << " matching due to center being false";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, NAN, 4}, {1, 2, 3, 4}).rolling(30, polars::Mean(), 1, true, false,
+                                                     polars::WindowProcessor::WindowType::triang),
+        Series({2.2151898734177218, 2.253012048192771, 2.325301204819277, 2.4074074074074074}, {1, 2, 3, 4})
+    ) << "Expect " << " matching due to center being true";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, NAN, 4}, {1, 2, 3, 4}).rolling(30, polars::Mean(), 1, false, false,
+                                                     polars::WindowProcessor::WindowType::triang),
+        Series({1.0, 1.2500000000000002, 1.3750000000000002, 1.6153846153846152}, {1, 2, 3, 4})
+    ) << "Expect " << " matching due to center being false";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, NAN, 3}, {1, 2, 3}).rolling(5, polars::Mean(), 1, true, false,
+                                             polars::WindowProcessor::WindowType::triang),
+        Series({1.5, 2.0, 2.5000000000000004}, {1, 2, 3})
+    ) << "Expect " << " matching center = true";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, NAN, 3}, {1, 2, 3}).rolling(5, polars::Mean(), 1, false, false,
+                                             polars::WindowProcessor::WindowType::triang),
+        Series({1.0, 1.0, 1.5}, {1, 2, 3})
+    ) << "Expect " << " matching center = false";
+
+}
+
+TEST(Series, edge_cases_without_NAN){
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(30, polars::Mean(), 1, true, false,
+                                                   polars::WindowProcessor::WindowType::triang),
+        Series({2.4038461538461537, 2.436363636363636, 2.5, 2.5636363636363635}, {1, 2, 3, 4})
+    ) << "Expect " << " matching due to center being true";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(30, polars::Mean(), 1, false, false,
+                                                   polars::WindowProcessor::WindowType::triang),
+        Series({1.0, 1.2500000000000002, 1.5555555555555556, 1.875}, {1, 2, 3, 4})
+    ) << "Expect " << " matching due to center being false";
+
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(6, polars::Mean(), 1, true, false,
+                                                   polars::WindowProcessor::WindowType::triang),
+        Series({1.5555555555555554, 2.0, 2.5, 3.0}, {1, 2, 3, 4})
+    ) << "Expect " << " matching due to center being true";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(6, polars::Mean(), 1, false, false,
+                                                   polars::WindowProcessor::WindowType::triang),
+        Series({1.0, 1.25, 1.5555555555555554, 2.0}, {1, 2, 3, 4})
+    ) << "Expect " << " matching due to center being false";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(5, polars::Mean(), 1, true, false,
+                                                   polars::WindowProcessor::WindowType::triang),
+        Series({1.6666666666666667, 2.25, 2.7499999999999996, 3.333333333333333}, {1, 2, 3, 4})
+    ) << "Expect " << " matching due to center being true";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({10, 2, 3, 4}, {1, 2, 3, 4}).rolling(5, polars::Mean(), 1, false, false,
+                                                   polars::WindowProcessor::WindowType::triang),
+        Series({10.0, 7.333333333333333, 6.166666666666668, 4.5}, {1, 2, 3, 4})
+    ) << "Expect " << " matching due to center being false and difference of 1";
+
+    // ODD ARRAY
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, 3}, {1, 2, 3}).rolling(5, polars::Mean(), 1, true, false,
+                                                   polars::WindowProcessor::WindowType::triang),
+        Series({1.6666666666666667, 2.0, 2.333333333333333}, {1, 2, 3})
+    ) << "Expect " << " matching center = true";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, 3}, {1, 2, 3}).rolling(5, polars::Mean(), 1, false, false,
+                                             polars::WindowProcessor::WindowType::triang),
+        Series({1.0, 1.3333333333333333, 1.6666666666666667}, {1, 2, 3})
+    ) << "Expect " << " matching center = false";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, 3}, {1, 2, 3}).rolling(4, polars::Mean(), 1, true, false,
+                                             polars::WindowProcessor::WindowType::triang),
+        Series({1.25, 1.7142857142857142, 2.2857142857142856}, {1, 2, 3})
+    ) << "Expect " << " matching center = true";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, 3}, {1, 2, 3}).rolling(4, polars::Mean(), 1, false, false,
+                                             polars::WindowProcessor::WindowType::triang),
+        Series({1.0, 1.25, 1.7142857142857142}, {1, 2, 3})
+    ) << "Expect " << " matching center = false";
+
+    // If we are just one above window we need to add NAN at each side for window centred
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(8, 1, true, false,
+                                                   polars::WindowProcessor::WindowType::triang).mean(),
+        Series({1.875, 2.1818181818181817, 2.5, 2.8181818181818183}, {1, 2, 3, 4})
+    ) << "Expect " << "no NANs because min periods is 1.";
+
+}
+
+
+TEST(Series, rolling_mean_triangle__larger_window) {
+
+    arma::vec input_values = {0.1, 0.3, 0.5, 0.4, 0.7, 0.9, 0.3, 0.1};
+    arma::vec input_timestamps = {1, 2, 3, 4, 5, 6, 7, 8};
+
+    Series input = Series(input_values, input_timestamps);
+
+    int window_size = 20;
+    // THESE ARE NOT CENTER = TRUE values :P
+    arma::vec expected_values_center_false = {0.10000000000000002, 0.14999999999999999, 0.21111111111111114, 0.25624999999999998,
+                                 0.29599999999999999, 0.34166666666666667, 0.37551020408163266,0.38906250000000003};
+
+    auto actual = input.rolling(window_size, polars::Mean(), 1, false, false, polars::WindowProcessor::WindowType::triang);
+
+    EXPECT_PRED2(Series::almost_equal, actual, Series(expected_values_center_false, input_timestamps));
+
+    arma::vec expected_values_center_true = {0.39687500000000003, 0.40454545454545465, 0.4175, 0.4293650793650794,
+                                              0.43984375, 0.44682539682539685, 0.44250000000000006, 0.4318181818181819};
+
+    actual = input.rolling(window_size, polars::Mean(), 1, true, false, polars::WindowProcessor::WindowType::triang);
+
+    EXPECT_PRED2(Series::almost_equal, actual, Series(expected_values_center_true, input_timestamps));
+
+}
+
+// Tests for exponential rolling window
+TEST(Series, rolling_mean_exponential__varying_window_size){
+
+    arma::vec input_values = {8.082052269494929, 7.0994737808621, 6.055734030373877, 4.9285535425112945, 4.2505326035450794};
+    arma::vec input_timestamps = {1, 2, 3, 4, 5};
+
+    auto expected = Series(
+        {8.082052269494929,
+         7.564905696530282,
+         7.008015782819431,
+         6.40334516917938,
+         5.87764065265126}, input_timestamps
+    );
+
+    Series input = Series(input_values, input_timestamps);
+
+    for(int i = 1; i<= 60; i++) {
+        Series actual = input.rolling(
+            i, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
+        );
+
+        EXPECT_PRED2(Series::almost_equal, actual, expected) << "Expect " << " matches expectation set by pandas.";
+    }
+}
+
+
+TEST(Series, rolling_mean_exponential__shorter_window_size){
+
+    // Test cases in which window size < array size
+
+    // even window size
+    int window_size = 2;
+    int decay_windows = 2;
+
+    arma::vec input_values = {5, 6, 7}; // odd sized array
+    arma::vec input_timestamps = {1, 2, 3};
+    arma::vec expected = {5.0, 5.666666666666667, 6.428571428571429};
+
+    Series input = Series(input_values, input_timestamps);
+
+    Series actual = input.rolling(
+        window_size, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 1./decay_windows
+    );
+
+    EXPECT_PRED2(Series::almost_equal, actual, Series(expected, input_timestamps))  << "Expect " << " for the odd/even case matches expectation set by pandas.";
+
+    input_values = {5, 6, 7, 8}; // even sized array
+    input_timestamps = {1, 2, 3, 4};
+    expected = {5.0, 5.666666666666667, 6.428571428571429, 7.266666666666667};
+
+    input = Series(input_values, input_timestamps);
+
+    actual = input.rolling(
+        window_size, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 1./decay_windows
+    );
+
+    EXPECT_PRED2(Series::almost_equal, actual, Series(expected, input_timestamps)) << "Expect " << " for the even/even case matches expectation set by pandas.";
+
+    // odd window size
+    window_size = 3;
+
+    input_values = {5, 6, 7, 8, 9}; // odd sized array
+    input_timestamps = {1, 2, 3, 4, 5};
+    expected = {5.0, 5.666666666666667, 6.428571428571429, 7.266666666666667, 8.161290322580646};
+
+    input = Series(input_values, input_timestamps);
+
+    actual = input.rolling(
+        window_size, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 1./decay_windows
+    );
+
+    EXPECT_PRED2(Series::almost_equal, actual, Series(expected, input_timestamps)) << "Expect " << " for the odd/odd case matches expectation set by pandas.";
+
+    input_values = {5, 6, 7, 8, 9, 10}; // even sized array
+    input_timestamps = {1, 2, 3, 4, 5, 6};
+    expected = {5.0, 5.666666666666667, 6.428571428571429, 7.266666666666667, 8.161290322580646, 9.095238095238095};
+
+    input = Series(input_values, input_timestamps);
+
+    actual = input.rolling(
+        window_size, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 1./decay_windows
+    );
+
+    EXPECT_PRED2(Series::almost_equal, actual, Series(expected, input_timestamps)) << "Expect " << " for the even/odd case matches expectation set by pandas.";
+}
+
+
+TEST(Series, rolling_mean_exponential_cases){
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, NAN, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(
+            6, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.5
+        ),
+        Series({1.0, 1.6666666666666667, 1.6666666666666667, 3.3636363636363638, 4.333333333333333, 5.237288135593221},
+               {1, 2, 3, 4, 5, 6})
+    ) << "Expect " << " matches pandas expectation";
+
+
+  EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, NAN, 4, NAN, 6}, {1,2,3,4,5,6}).rolling(
+            8, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.5
+        ),
+        Series({1.0, 1.6666666666666667, 1.6666666666666667, 3.3636363636363638, 3.3636363636363638, 5.325581395348837},
+               {1, 2, 3, 4, 5, 6})
+    ) << "Expect " << " matches pandas expectation";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1, 2, NAN, 4, NAN}, {1,2,3,4,5}).rolling(
+            7, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.5
+        ),
+        Series({1.0, 1.6666666666666667, 1.6666666666666667, 3.3636363636363638, 3.3636363636363638},
+               {1, 2, 3, 4, 5})
+    ) << "Expect " << " matches pandas expectation";
+
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
+            9, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
+        ),
+        Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
+    ) << "Expect " << " matches pandas expectation";
+
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
+            8, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
+        ),
+        Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
+    ) << "Expect " << " matches pandas expectation";
+
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
+            7, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
+        ),
+        Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
+    ) << "Expect " << " matches pandas expectation";
+
+    //Values at end duplicated.
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
+            6, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
+        ),
+        Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
+    ) << "Expect " << " matches pandas expectation";
+
+    // Double first value and then correct
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
+            5, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
+        ),
+        Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
+    ) << "Expect " << " matches pandas expectations";
+
+    // False and False array same size
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
+            4, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
+        ),
+        Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
+    ) << "Expect " << " matches pandas expectation";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
+            4, polars::ExpMean(), 1, true, false, polars::WindowProcessor::WindowType::expn, 0.1
+        ),
+        Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
+    ) << "Expect " << " matches pandas expectation";
+
+}
+
+
 TEST(Series, rolling_mean_exponential) {
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({0.1, NAN, 0.3, 0.4}, {1, 2, 3, 4}).fillna(0).rolling(3, polars::ExpMean(), 1, false, false,
+                                                                        polars::WindowProcessor::WindowType::expn, 0.5),
+        Series({0.1, 0.03333333333333333, 0.18571428571428572, 0.3}, {1, 2, 3, 4})
+    );
 
     EXPECT_PRED2(
             Series::almost_equal,
@@ -428,28 +798,28 @@ TEST(Series, rolling_mean_exponential) {
 
     EXPECT_PRED2(
             Series::almost_equal,
-            Series({0.1, 0.2, 0.3, 0.4}, {1, 2, 3, 4}).rolling(4, polars::ExpMean(), 1, true, false,
+            Series({0.1, 0.2, 0.3, 0.4}, {1, 2, 3, 4}).rolling(4, polars::ExpMean(), 1, false, false,
                                                                polars::WindowProcessor::WindowType::expn, 0.5),
             Series({0.1, 0.16666666666666667, 0.24285714285714284, 0.32666666666666666}, {1, 2, 3, 4})
     ) << "Expect " << " first value to be the same as original series.";
 
     EXPECT_PRED2(
             Series::equal,
-            Series().rolling(4, polars::ExpMean(), 1, true, false, polars::WindowProcessor::WindowType::expn, 0.5),
+            Series().rolling(4, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.5),
             Series()
     ) << "Expect " << " empty array back.";
 
     EXPECT_PRED2(
             Series::equal,
-            Series({1, NAN, 3}, {1, 2, 3}).rolling(3, polars::ExpMean(), 1, true, false,
+            Series({1, NAN, 3}, {1, 2, 3}).rolling(3, polars::ExpMean(), 1, false, false,
                                                    polars::WindowProcessor::WindowType::expn, 0.5),
             Series({1., 1., 2.6}, {1, 2, 3})
     ) << "Expect " << " ignore NANs when computing weights.";
 
 
     EXPECT_PRED2(
-            Series::equal,
-            Series({1, NAN, NAN, 4}, {1, 2, 3, 4}).rolling(4, polars::ExpMean(), 1, true, false,
+            Series::almost_equal,
+            Series({1, NAN, NAN, 4}, {1, 2, 3, 4}).rolling(4, polars::ExpMean(), 1, false, false,
                                                            polars::WindowProcessor::WindowType::expn, 0.5),
             Series({1, 1, 1, 3.6666666666666665}, {1, 2, 3, 4})
     ) << "Expect " << "with two NANs. This differs from Pandas as it ignores NAN's when computing the weights.";
@@ -457,7 +827,7 @@ TEST(Series, rolling_mean_exponential) {
 
     EXPECT_PRED2(
             Series::equal,
-            Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(4, polars::ExpMean(), 1, true, false,
+            Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(4, polars::ExpMean(), 1, false, false,
                                                        polars::WindowProcessor::WindowType::expn, 0.5),
             Series({1, 1.6666666666666667, 2.4285714285714284, 3.2666666666666666}, {1, 2, 3, 4})
     ) << "Expect " << "with a window of 4";

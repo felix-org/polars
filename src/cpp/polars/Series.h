@@ -155,6 +155,10 @@ namespace polars {
     };
 
     std::ostream &operator<<(std::ostream &os, const Series &ts);
+
+
+    polars::Series _window_size_correction(int window_size, bool center, const polars::Series &input);
+    polars::Series _ewm_input_correction(const polars::Series &input);
 }
 
 
