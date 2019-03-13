@@ -23,27 +23,34 @@ namespace polars {
 
     SeriesMask SeriesMask::iloc(int from, int to, int step) const {
 
-        if(empty()){
+        if(empty()  || (from == to)){
             return SeriesMask();
         }
 
         arma::uvec pos;
+        int effective_from;
+        int effective_to;
 
-        auto effective_from = from;
-        auto effective_to = to;
+        if(from < 0){
+            effective_from = values().size() + from;
+        } else {
+            effective_from = from;
+        }
 
-        if((from < 0) && (to > 0)){
-            effective_from = effective_from  + values().size();
-            pos = arma::regspace<arma::uvec>(effective_from, step, to - 1);
+        if(to < 0){
+            effective_to = values().size() + to - 1;
+        } else if(to == 0) {
+            effective_to = to;
+        } else {
+            effective_to = to - 1;
         }
-        else if(from < 0 && to < 0){
-            effective_from = effective_from + values().size();
-            effective_to = effective_to  + values().size();
-            pos = arma::regspace<arma::uvec>(effective_from, step, effective_to - 1);
+
+        pos = arma::regspace<arma::uvec>(effective_from,  step,  effective_to);
+
+        if(pos.size() > size()){
+            pos = pos.subvec(0, size() - 1);
         }
-        else {
-            pos = arma::regspace<arma::uvec>(effective_from,  step, effective_to - 1);
-        }
+
         return SeriesMask(values().elem(pos),index().elem(pos));
     }
 
