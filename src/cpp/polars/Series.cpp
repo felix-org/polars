@@ -174,7 +174,38 @@ namespace polars {
 
 // Location.
 
-// by  position of the indices
+    Series Series::iloc(int from, int to, int step) const {
+
+        if(empty() || (from == to)){
+            return Series();
+        }
+
+        arma::uvec pos;
+        int effective_from;
+        int effective_to;
+
+        if(from < 0){
+            effective_from = values().size() + from;
+        } else {
+            effective_from = from;
+        }
+
+        if(to < 0){
+            effective_to = values().size() + to - 1;
+        } else if(to == 0) {
+            effective_to = to;
+        } else {
+            effective_to = to - 1;
+        }
+
+        pos = arma::regspace<arma::uvec>(effective_from,  step,  effective_to);
+
+        if(pos.size() > size()){
+            pos = pos.subvec(0, size() - 1);
+        }
+
+        return Series(values().elem(pos),index().elem(pos));
+    }
 
     // TODO: Add slicing logic of the form .iloc(int start, int stop, int step=1) so it can be called like ser.iloc(0, -10).
     Series Series::iloc(const arma::uvec &pos) const {
@@ -283,46 +314,62 @@ namespace polars {
         }
     }
 
-    // TODO: This method needs to be re-factored.
+    // TODO: This method needs to be re-factored particularly for the exp case.
     arma::vec _ewm_correction(const arma::vec &results, const arma::vec &vals,
                                       polars::WindowProcessor::WindowType win_type) {
         /* Method that shifts result from rolling average with exp window so it yields correct normalisation and allows usage
          * of rolling method hereby implemented.
          * This matches pandas ewm for its default case */
 
-        if (results.n_elem == 0) {
-            return arma::vec({});
+        arma::uvec res_fin = arma::find_finite(results);
+
+        if (results.empty() || res_fin.empty()){
+            arma::vec effective_results(vals.size());
+            effective_results.fill(NAN);
+            return effective_results;
         }
 
         if (win_type == polars::WindowProcessor::WindowType::expn) {
             // Correction to match pandas ewm - shift by one.
-            arma::vec eff_results = results;
+            arma::vec effective_results = results;
             arma::vec results_ewm;
+            int missing_initial_nans =  0;
+
+            // Check if it was a case of originally front NANs - no added padding
+            arma::uvec finite_values_idx = arma::find_finite(vals);
+            if(finite_values_idx[0] != 0){
+                // we had originally some NANs.
+                missing_initial_nans = finite_values_idx[0];
+            }
+
+            arma::vec effective_vals = vals.subvec(missing_initial_nans, vals.size() - 1);
 
             // For the cases in which window_size < size we need to correct
-            if(results.size() != vals.size()){
-                eff_results = eff_results.elem( arma::find_finite(eff_results) );
-                eff_results = eff_results.head(vals.size());
+            if( (results.size() > effective_vals.size())){
+                effective_results = effective_results.elem( arma::find_finite(effective_results) );
+                effective_results = effective_results.head(effective_vals.size());
             }
 
-            if(!eff_results.is_finite()){
-                results_ewm = eff_results.elem( arma::find_finite(eff_results) );
+            if ( effective_results.at(0) == effective_vals[0] ){
+                // difference of 1 for center = False.
+                results_ewm = effective_results;
+            } else {
+                results_ewm.copy_size(effective_results) ;
+                results_ewm.at(0) = vals[0];
+
+                for (int j = 1; j < results_ewm.n_elem; j++) {
+                    results_ewm[j] = effective_results[j - 1];
+                }
+            }
+
+            if(missing_initial_nans > 0){
+                auto added_nans = vals.size() - results_ewm.size();
+                arma::vec pn(added_nans);
+                pn.fill(NAN);
+                return arma::join_cols(pn, results_ewm);
+            } else {
                 return results_ewm;
             }
-
-            if (eff_results.at(0) == vals[0]) {
-                // difference of 1 for center = False.
-                return eff_results;
-            }
-
-            results_ewm.copy_size(eff_results) ;
-            results_ewm.at(0) = vals[0];
-
-            for (int j = 1; j < results_ewm.n_elem; j++) {
-                results_ewm[j] = eff_results[j - 1];
-            }
-
-            return results_ewm;
 
         } else {
             return results;
@@ -332,7 +379,7 @@ namespace polars {
     // TODO: This method needs to be re-factored.
     // TODO: Combine cases here with those in input for exponential case.
     polars::Series _window_size_correction(int window_size, bool center, const polars::Series &input){
-        // assume that this function only gets called when window_size > input.size()
+        // This is required because of relative size of window size vs array size.
 
         auto n = window_size / 2;
 
@@ -390,28 +437,36 @@ namespace polars {
         return Series(new_input, new_timestamps);
     }
 
+    // TODO: This method needs to be refactored.
     polars::Series _ewm_input_correction(const polars::Series &input){
         // only gets called when window_size < input.size() and we have win_type = expn
+        Series new_input = input;
 
-        if(input.empty()){
+        if(input.empty() || input.dropna().empty()){
             return input;
         }
 
-        arma::vec v(input.size());
+        // remove front NANs
+        if(std::isnan(input.values()[0])){
+            arma::uvec finite_input_idx = arma::find_finite(input.values());
+            auto number_of_nans = finite_input_idx[0];
+            new_input = input.iloc(number_of_nans, input.size());
+        }
+
+        arma::vec v(new_input.size());
         v.fill(NAN);
-        arma::vec new_input = arma::join_cols(v, input.values());
+        arma::vec new_values = arma::join_cols(v, new_input.values());
 
         // Get new timestamps
-
-        auto ts = input.index();
+        auto ts = new_input.index();
         auto index_0 = ts.at(0);
         auto index_1 = ts.at(1);
-        double delta = std::ceil(std::abs(index_1 -  index_0));
+        double delta = std::ceil(std::abs(input.index().at(1) -  input.index().at(0)));
 
-        auto new_index_0 = index_0 - input.size() * delta;
-        arma::vec new_timestamps = arma::linspace(new_index_0, ts.at(ts.size()-1), 2*input.size());
+        auto new_index_0 = index_0 - new_input.size() * delta;
+        arma::vec new_timestamps = arma::linspace(new_index_0, ts.at(ts.size()-1), 2 * new_input.size());
 
-        return Series(new_input, new_timestamps);
+        return Series(new_values, new_timestamps);
     }
 
 
