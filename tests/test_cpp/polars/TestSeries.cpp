@@ -471,18 +471,109 @@ TEST(Series, quantile) {
 
 TEST(Series, iloc) {
 
+    EXPECT_PRED2(
+        Series::equal,
+        Series(),
+        Series().iloc(1,3)
+    ) << "Expect " << "empty series";
+
+
+    EXPECT_EQ(
+        Series({1, 2, 3, 4}, {1, 2, 3, 4}).iloc(2),
+        3
+    ) << "Expect " << " element 3 to be retrieved";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1, 2}, {1, 2}).iloc(0, 0),
+        Series({}, {})
+    )  << "Expect " << " empty series";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1, 2}, {1, 2}).iloc(2, 2),
+        Series({}, {})
+    )  << "Expect " << " empty series";
+
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1, 2}, {1, 2}).iloc(0, 10),
+        Series({1, 2}, {1, 2})
+    )  << "Expect " << " same series since to > series size and from is positive";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({0,1,2,3}, {0,1,2,3}),
+        Series({0,1,2,3}, {0,1,2,3}).iloc(0, 4)
+    ) << "Expect " << " same series since to > series size and from is positive";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({0, 2}, {0, 2}),
+        Series({0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, 3, 4, 5, 6, 7}).iloc(0,4,2)
+    ) << "Expect " << " slice of series with step 2";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({7, 8, 9, 10, 11, 12}, {7, 8, 9, 10, 11, 12}).iloc(1, 6),
+        Series({8, 9, 10, 11, 12}, {8, 9, 10, 11, 12})
+    ) << "Expect " << " subseries given from and to > 0 ";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({}, {}).iloc(-4, -2),
+        Series({}, {})
+    )  << "Expect " << " empty series input sliced to give empty series";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({3, 4, 5, 6}, {3, 4, 5, 6}).iloc(2, -1),
+        Series({5}, {5})
+    ) << "Expect " << " third element given positive from, and negative to";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({3, 4, 5, 6}, {3, 4, 5, 6}).iloc(-3, -1),
+        Series({4, 5}, {4, 5})
+    ) << "Expect " << " middle elements given negative from, and negative to";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({10,11}, {10,11}),
+        Series({7, 8, 9, 10, 11, 12}, {7, 8, 9, 10, 11, 12}).iloc(-3, 5)
+    ) << "Expect " << " middle elements given negative from, and positive to";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({12}, {12}),
+        Series({7, 8, 9, 10, 11, 12}, {7, 8, 9, 10, 11, 12}).iloc(-1, 6)
+    ) << "Expect " << " last element given negative from, and positive to of the size of the series";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({10, 11, 12}, {10, 11, 12}),
+        Series({7, 8, 9, 10, 11, 12}, {7, 8, 9, 10, 11, 12}).iloc(-3, 6)
+    ) << "Expect " << " last elements given negative from, and positive to of the size of the series";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({3, 4, 5, 6, 7}, {3, 4, 5, 6, 7}).iloc(-3, 0),
+        Series()
+    ) << " empty series";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({3, 4, 5, 6}, {3, 4, 5, 6}).iloc(0, -3),
+        Series({3}, {3})
+    ) << " first element given negative value of size of array + 1";
+
     auto indices = arma::uvec{1, 2};
 
     EXPECT_PRED2(
             Series::equal,
             Series({20, 40, 34, 10}, {1, 2, 3, 4}).iloc(indices),
             Series({40, 34}, {2, 3})) << "Expect " << "subset including specified indices to be retrieved";
-
-
-    EXPECT_EQ(
-            Series({1, 2, 3, 4}, {1, 2, 3, 4}).iloc(2),
-            3
-    ) << "Expect " << " element 3 to be retrieved";
 
 }
 

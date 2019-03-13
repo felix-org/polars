@@ -21,6 +21,39 @@ namespace polars {
         //assert(!arma::any(v > 1));  // Np SeriesMask values may be greater than 1
     };
 
+    SeriesMask SeriesMask::iloc(int from, int to, int step) const {
+
+        if(empty()  || (from == to)){
+            return SeriesMask();
+        }
+
+        arma::uvec pos;
+        int effective_from;
+        int effective_to;
+
+        if(from < 0){
+            effective_from = values().size() + from;
+        } else {
+            effective_from = from;
+        }
+
+        if(to < 0){
+            effective_to = values().size() + to - 1;
+        } else if(to == 0) {
+            effective_to = to;
+        } else {
+            effective_to = to - 1;
+        }
+
+        pos = arma::regspace<arma::uvec>(effective_from,  step,  effective_to);
+
+        if(pos.size() > size()){
+            pos = pos.subvec(0, size() - 1);
+        }
+
+        return SeriesMask(values().elem(pos),index().elem(pos));
+    }
+
     // TODO: Add slicing logic of the form .iloc(int start, int stop, int step=1) so it can be called like ser.iloc(0, -10).
     SeriesMask SeriesMask::iloc(const arma::uvec &pos) const {
         return SeriesMask(values().elem(pos), index().elem(pos));

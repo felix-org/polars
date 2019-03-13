@@ -174,9 +174,40 @@ namespace polars {
 
 // Location.
 
-// by  position of the indices
+    Series Series::iloc(int from, int to, int step) const {
 
-    // TODO: Add slicing logic of the form .iloc(int start, int stop, int step=1) so it can be called like ser.iloc(0, -10).
+        if(empty() || (from == to)){
+            return Series();
+        }
+
+        arma::uvec pos;
+        int effective_from;
+        int effective_to;
+
+        if(from < 0){
+            effective_from = values().size() + from;
+        } else {
+            effective_from = from;
+        }
+
+        if(to < 0){
+            effective_to = values().size() + to - 1;
+        } else if(to == 0) {
+            effective_to = to;
+        } else {
+            effective_to = to - 1;
+        }
+
+        pos = arma::regspace<arma::uvec>(effective_from,  step,  effective_to);
+
+        if(pos.size() > size()){
+            pos = pos.subvec(0, size() - 1);
+        }
+
+        return Series(values().elem(pos),index().elem(pos));
+    }
+
+
     Series Series::iloc(const arma::uvec &pos) const {
         return Series(values().elem(pos), index().elem(pos));
     }
@@ -450,6 +481,7 @@ namespace polars {
 
         arma::uword centerOffset = round(((float) windowSize - 1) / 2.0);
 
+        // roll a window [left,right], of up to size windowSize, centered on centerIdx, and hand to processor if there are minPeriods finite values.
         // roll a window [left,right], of up to size windowSize, centered on centerIdx, and hand to processor if there are minPeriods finite values.
         for (arma::uword centerIdx = 0; centerIdx < input_idx.size(); centerIdx++) {
 
