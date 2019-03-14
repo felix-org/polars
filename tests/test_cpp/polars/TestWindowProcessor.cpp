@@ -356,6 +356,13 @@ TEST(Series, rolling_sum_triangle) {
     ) << "Expect " << "with a window of 2";
 
     EXPECT_PRED2(
+        Series::equal,
+        Series({NAN, 1, 2, 3}, {0, 1, 2, 3}).rolling(2, polars::Sum(), 0, true, false,
+                                             polars::WindowProcessor::WindowType::triang),
+        Series({NAN, NAN, 1.5, 2.5}, {0, 1, 2, 3})
+    ) << "Expect " << "with a window of 2";
+
+    EXPECT_PRED2(
             Series::equal,
             Series({1, 2, 3.5, -1, NAN}, {1, 2, 3, 4, 5}).rolling(3, polars::Sum(), 0, true, false,
                                                                   polars::WindowProcessor::WindowType::triang),
@@ -441,6 +448,10 @@ TEST(Series, rolling_mean_triangle) {
 
 
 TEST(Series, edge_cases_with_NAN){
+
+    EXPECT_PRED2(Series::equal, Series({1},{1}).rolling(1, 0, true, false, polars::WindowProcessor::WindowType::triang).mean(),
+                 Series({1}, {1})
+    );
 
     EXPECT_PRED2(
         Series::almost_equal,

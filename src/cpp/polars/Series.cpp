@@ -314,7 +314,7 @@ namespace polars {
         }
     }
 
-    // TODO: This method needs to be re-factored particularly for the exp case.
+    // TODO: This method needs to be re-factored.
     arma::vec _ewm_correction(const arma::vec &results, const arma::vec &vals,
                                       polars::WindowProcessor::WindowType win_type) {
         /* Method that shifts result from rolling average with exp window so it yields correct normalisation and allows usage
@@ -376,68 +376,61 @@ namespace polars {
         }
     }
 
-    // TODO: This method needs to be re-factored.
     // TODO: Combine cases here with those in input for exponential case.
     polars::Series _window_size_correction(int window_size, bool center, const polars::Series &input){
         // This is required because of relative size of window size vs array size.
 
-        auto n = window_size / 2;
+        if(input.size() == 1){
+            return input;
+        }
 
+        auto n = window_size / 2;
         if(input.size() % 2 == 0){ n = n - 1; };
 
-        // Prepare timestamps
+        // Get index delta
         auto ts = input.index();
+        double delta = std::ceil(std::abs(ts(1) -  ts(0)));
 
-        auto index_0 = ts.at(0);
-        auto index_1 = ts.at(1);
+        // Vector with n nans
+        arma::vec multi_nan(n);
+        multi_nan.fill(NAN);
 
-        double delta = std::ceil(std::abs(index_1 -  index_0));
-
-        double new_index_0;
-        arma::vec new_timestamps;
-
-        arma::vec v(n);
-        v.fill(NAN);
-
+        // Vector with single nan
         arma::vec single_nan(1);
         single_nan.fill(NAN);
 
-        arma::vec new_input;
+        // Base case is padding goes to the right
+        arma::vec new_input = arma::join_cols(input.values(),  multi_nan);
 
-        if( (center == false) && (window_size > input.size() + 1) ) {
-            new_input = arma::join_cols(v, input.values());
+        auto start_idx = ts(0);
+        auto end_idx = ts(ts.size()-1) + n * delta;
+        auto effective_size = n + input.size();
 
-            // padding goes on the left
-            new_index_0 = index_0 - n * delta;
-            new_timestamps = arma::linspace(new_index_0, ts.at(ts.size()-1), (n + input.size()));
+        if (center == false){
 
-        } else if(center == false &&  n == 1) {
+            if( window_size > input.size() + 1 ){
+                new_input = arma::join_cols(multi_nan, input.values());
+                start_idx = start_idx - n * delta;
+                end_idx = end_idx - n * delta;
+            } else if (n == 1) {
+                new_input = arma::join_cols(single_nan, arma::join_cols(single_nan, input.values()));
+                start_idx = start_idx - 2 * delta;
+                end_idx = end_idx - delta;
 
-            new_input =arma::join_cols(single_nan, arma::join_cols(single_nan, input.values()));
-
-            // passing goes on the left x2
-            new_index_0 = index_0 - 2 * delta;
-            new_timestamps = arma::linspace(new_index_0, ts.at(ts.size()-1), 2 + input.size() );
-
-        } else if (center == false && n == 2){
-            new_input = arma::join_cols(single_nan, arma::join_cols(input.values(), single_nan));
-
-            // padding goes on the edges
-            new_index_0 = index_0 - delta;
-            new_timestamps = arma::linspace(new_index_0, ts.at(ts.size()-1) + delta, (n + input.size()));
+                effective_size = effective_size + 1;
+            } else if (n == 2) {
+                new_input = arma::join_cols(single_nan, arma::join_cols(input.values(), single_nan));
+                start_idx = start_idx - delta;
+                end_idx = end_idx - delta;
+            }
         }
-        else {
-            new_input = arma::join_cols(input.values(),  v);
 
-            // padding goes on the right
-            new_index_0 = ts.at(ts.size()-1) + n * delta;
-            new_timestamps = arma::linspace(index_0, new_index_0, (n + input.size()));
-        }
+        arma::vec new_timestamps = arma::linspace(start_idx, end_idx, effective_size);
 
         return Series(new_input, new_timestamps);
     }
 
-    // TODO: This method needs to be refactored.
+    // TODO: Refactor this method and combine with window_size_correction since similar logic
     polars::Series _ewm_input_correction(const polars::Series &input){
         // only gets called when window_size < input.size() and we have win_type = expn
         Series new_input = input;
@@ -447,9 +440,9 @@ namespace polars {
         }
 
         // remove front NANs
-        if(std::isnan(input.values()[0])){
+        if(std::isnan(input.values()(0))){
             arma::uvec finite_input_idx = arma::find_finite(input.values());
-            auto number_of_nans = finite_input_idx[0];
+            auto number_of_nans = finite_input_idx(0);
             new_input = input.iloc(number_of_nans, input.size());
         }
 
@@ -459,12 +452,10 @@ namespace polars {
 
         // Get new timestamps
         auto ts = new_input.index();
-        auto index_0 = ts.at(0);
-        auto index_1 = ts.at(1);
-        double delta = std::ceil(std::abs(input.index().at(1) -  input.index().at(0)));
+        auto delta = std::ceil(std::abs(input.index()(1) -  input.index()(0))); // use original input
 
-        auto new_index_0 = index_0 - new_input.size() * delta;
-        arma::vec new_timestamps = arma::linspace(new_index_0, ts.at(ts.size()-1), 2 * new_input.size());
+        auto new_index_0 = ts(0) - new_input.size() * delta;
+        arma::vec new_timestamps = arma::linspace(new_index_0, ts(ts.size()-1), 2 * new_input.size());
 
         return Series(new_values, new_timestamps);
     }
