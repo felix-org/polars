@@ -356,6 +356,13 @@ TEST(Series, rolling_sum_triangle) {
     ) << "Expect " << "with a window of 2";
 
     EXPECT_PRED2(
+        Series::equal,
+        Series({NAN, 1, 2, 3}, {0, 1, 2, 3}).rolling(2, polars::Sum(), 0, true, false,
+                                             polars::WindowProcessor::WindowType::triang),
+        Series({NAN, NAN, 1.5, 2.5}, {0, 1, 2, 3})
+    ) << "Expect " << "with a window of 2";
+
+    EXPECT_PRED2(
             Series::equal,
             Series({1, 2, 3.5, -1, NAN}, {1, 2, 3, 4, 5}).rolling(3, polars::Sum(), 0, true, false,
                                                                   polars::WindowProcessor::WindowType::triang),
@@ -441,6 +448,10 @@ TEST(Series, rolling_mean_triangle) {
 
 
 TEST(Series, edge_cases_with_NAN){
+
+    EXPECT_PRED2(Series::equal, Series({1},{1}).rolling(1, 0, true, false, polars::WindowProcessor::WindowType::triang).mean(),
+                 Series({1}, {1})
+    );
 
     EXPECT_PRED2(
         Series::almost_equal,
@@ -831,6 +842,57 @@ TEST(Series, rolling_mean_exponential) {
                                                        polars::WindowProcessor::WindowType::expn, 0.5),
             Series({1, 1.6666666666666667, 2.4285714285714284, 3.2666666666666666}, {1, 2, 3, 4})
     ) << "Expect " << "with a window of 4";
+}
+
+
+TEST(Series, rolling_mean_exponential_NAN) {
+
+    arma::vec inp(6);
+    inp.fill(NAN);
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({NAN, NAN, 2, 3, NAN, 4}, {1, 2, 3, 4, 5, 6}).rolling(10, polars::ExpMean(), 1, false, false,
+                                                             polars::WindowProcessor::WindowType::expn, 0.5),
+        Series({NAN, NAN, 2.0, 2.6666666666666665, 2.6666666666666665, 3.6363636363636362}, {1, 2, 3, 4, 5, 6})
+    ) << "Expect " << " same result as without nans when window size is larger than array and intermediate NAN";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({NAN, NAN, 2, 3, 4}, {1, 2, 3, 4, 5}).rolling(10, polars::ExpMean(), 1, false, false,
+                                                             polars::WindowProcessor::WindowType::expn, 0.5),
+        Series({NAN, NAN, 2.0, 2.6666666666666665, 3.4285714285714284}, {1, 2, 3, 4, 5})
+    ) << "Expect " << " same result as without nans when window size is larger than array";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({NAN, NAN, 2, 3, 4}, {1, 2, 3, 4, 5}).rolling(3, polars::ExpMean(), 1, false, false,
+                                                 polars::WindowProcessor::WindowType::expn, 0.5),
+        Series({NAN, NAN, 2.0, 2.6666666666666665, 3.4285714285714284}, {1, 2, 3, 4, 5})
+    ) << "Expect " << " same result as without nans when window size is smaller than array";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({NAN, NAN, 2}, {1, 2, 3}).rolling(3, polars::ExpMean(), 1, false, false,
+                                         polars::WindowProcessor::WindowType::expn, 0.5),
+        Series({NAN, NAN, 2}, {1, 2, 3})
+    ) << "Expect " << "identity preserving two nans";
+
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({NAN, 2}, {1, 2}).rolling(3, polars::ExpMean(), 1, false, false,
+                                                                         polars::WindowProcessor::WindowType::expn, 0.5),
+        Series({NAN, 2}, {1, 2})
+    ) << "Expect " << "identity preserving one nan";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series(inp, {1, 2, 3, 4, 5, 6}).rolling(6, polars::ExpMean(), 1, false, false,
+                                                polars::WindowProcessor::WindowType::expn, 0.5),
+        Series(inp, {1, 2, 3, 4, 5, 6})
+    ) << "Expect " << "with a window of 6, all nans back";
+
 }
 
 
