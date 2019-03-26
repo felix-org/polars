@@ -163,6 +163,42 @@ jobs:
           name: Run c++ tests
           command: build/cmake-makefile-debug/polars_cpp_test
 
+  example_project:
+    docker:
+      - image: circleci/buildpack-deps:bionic
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install Dependencies
+          command: sudo apt-get update && sudo apt-get install -y cmake clang && sudo apt-get clean
+          # TODO pin versions of docker image, cmake and clang
+
+      - run: git submodule update --init --recursive
+
+      - run:
+          name: Build polars with cmake
+          command: |
+            mkdir -p build/polars
+            cd build/polars
+            cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../../install -G "Unix Makefiles" ../..
+            cmake --build . --target all -- -j 2
+            cmake --build . --target install
+
+
+      - run:
+          name: Build arctic with cmake
+          command: |
+            mkdir -p build/arctic
+            cd build/arctic
+            cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MODULE_PATH=../../install -G "Unix Makefiles" ../../tests/example_project
+            sudo cmake --build . --target all -- -j 2
+
+      - run:
+          name: Run artic project
+          command: build/arctic/arctic_app
+
 workflows:
   version: 2
   test_all:
@@ -173,3 +209,4 @@ workflows:
       - xcode_9_4
       - xcode_10_0
       - debian_make
+      - example_project
