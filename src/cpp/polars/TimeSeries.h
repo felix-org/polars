@@ -100,7 +100,8 @@ namespace polars {
     private:
         TimeSeries(arma::vec v0, arma::vec t0) : Series(v0, t0) {};
         TimeSeries(const Series& ser) : Series(ser) {};
-
+    
+    public:
         static double chrono_to_double(TimePointType timepoint){
             return time_point_cast<typename TimePointType::duration>(timepoint).time_since_epoch().count();
         };
